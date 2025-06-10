@@ -2,12 +2,11 @@
 
 name: Deploy Sphinx Docs to GitHub Pages
 
-# Запуск робочого процесу при кожному push до гілки 'main'
-# Якщо ваша основна гілка називається 'master', змініть 'main' на 'master'
+# Запуск робочого процесу при кожному push до гілки 'master'
 on:
   push:
     branches:
-      - master # Змініть на 'master', якщо ваша основна гілка так називається
+      - master # Змінено на 'master' відповідно до вашого використання
 
 # Дозволяємо GitHub Pages читати вміст та розгортати сторінки
 permissions:
@@ -25,34 +24,45 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.9' # Ваша версія Python
         cache: 'pip'
 
     - name: Install dependencies
       run: |
         pip install sphinx sphinx-rtd-theme
 
-    - name: List contents of docs directory # Крок для налагодження
+    - name: Debugging: List contents and current directory
       run: |
-        echo "Listing contents of docs directory:"
+        echo "Current working directory before build:"
+        pwd
+        echo "Contents of docs/ directory:"
         ls -la docs/
-        echo "Listing contents of docs/_build directory (if exists):"
-        ls -la docs/_build/ || true # Додаємо '|| true' щоб крок не провалився, якщо _build ще немає
+        echo "Contents of docs/source/ directory:"
+        ls -la docs/source/
+        echo "Contents of for_test directory (where Python modules are):"
+        ls -la for_test/
 
     - name: Build Sphinx documentation
       run: |
-        cd docs
-        make html
+        # Спочатку переходимо до директорії docs/source
+        cd docs/source
+        # Тепер, оскільки ми в docs/source, джерелом є '.', а вивід йде в ../_build/html
+        # -b html: вивід у форматі HTML
+        # -d ../_build/doctrees: шлях до папки doctrees (тимчасові файли Sphinx)
+        # .: джерело файлів .rst (поточна директорія - docs/source)
+        # ../_build/html: шлях до папки, куди будуть згенеровані HTML-файли (docs/_build/html)
+        sphinx-build -b html -d ../_build/doctrees . ../_build/html
       env:
-        PYTHONPATH: ${{ github.workspace }}
+        # Встановлюємо PYTHONPATH, щоб Sphinx міг знайти ваші модулі Python
+        # Це має вказувати на папку, де знаходяться bot.py, handlers.py тощо
+        # Цей шлях абсолютний від кореня репозиторію
+        PYTHONPATH: ${{ github.workspace }}/for_test
 
-    - name: Verify build output exists # Крок для налагодження: перевірка наявності папки
+    - name: Verify build output exists
       run: |
         echo "Verifying docs/_build/html directory after build:"
         ls -la docs/_build/html/
         test -d docs/_build/html/ # Ця команда провалить крок, якщо директорії немає
-      # Якщо цей крок провалиться, це означає, що Sphinx таки не створив папку,
-      # або вона була видалена.
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
@@ -67,9 +77,12 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: build # Це завдання залежить від успішного виконання завдання 'build'
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+
+
 
