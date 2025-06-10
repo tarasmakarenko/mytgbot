@@ -50,7 +50,7 @@ async def show_court_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text)
 
 async def show_court_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    with open("court_schedule.json", "r", encoding="utf-8") as f:
+    with open("docx/court_schedule.json", "r", encoding="utf-8") as f:
         data = json.load(f)
     msg = "📅 Розклад засідань:\n"
     for item in data:
@@ -59,7 +59,7 @@ async def show_court_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def show_contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = load_language(update.effective_user.id)
-    with open("contacts.json", "r", encoding="utf-8") as f:
+    with open("docx/contacts.json", "r", encoding="utf-8") as f:
         data = json.load(f)
     entries = data.get(lang, [])
     msg = "📞 Контакти інших установ:\n"

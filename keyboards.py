@@ -23,7 +23,7 @@ def get_main_menu(lang):
     )
 
 def get_faq_keyboard(lang):
-    with open("faq.json", "r", encoding="utf-8") as f:
+    with open("docx/faq.json", "r", encoding="utf-8") as f:
         data = json.load(f)
     return ReplyKeyboardMarkup([[q] for q in data[lang].keys()], resize_keyboard=True)
 
