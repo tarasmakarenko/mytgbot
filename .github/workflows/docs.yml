@@ -4,7 +4,6 @@ name: Deploy Sphinx Docs to GitHub Pages
 
 # Запуск робочого процесу при кожному push до гілки 'main'
 # Якщо ваша основна гілка називається 'master', змініть 'main' на 'master'
-# Якщо ви хочете розгортати документацію з іншої гілки (наприклад, 'develop'), змініть 'main'
 on:
   push:
     branches:
@@ -17,50 +16,60 @@ permissions:
   id-token: write
 
 jobs:
-  # Завдання для збирання документації
   build:
-    runs-on: ubuntu-latest # Використовуємо операційну систему Ubuntu для виконання завдання
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository # Крок: Клонування вашого репозиторію
+    - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Python # Крок: Налаштування Python
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.9' # Виберіть версію Python, яку ви використовуєте (наприклад, 3.9)
+        python-version: '3.9'
         cache: 'pip'
 
-    - name: Install dependencies # Крок: Встановлення залежностей (Sphinx та теми)
+    - name: Install dependencies
       run: |
         pip install sphinx sphinx-rtd-theme
 
-    - name: Build Sphinx documentation # Крок: Збирання документації за допомогою Sphinx
+    - name: List contents of docs directory # Крок для налагодження
       run: |
-        # Переходимо до директорії docs, де знаходиться Makefile
+        echo "Listing contents of docs directory:"
+        ls -la docs/
+        echo "Listing contents of docs/_build directory (if exists):"
+        ls -la docs/_build/ || true # Додаємо '|| true' щоб крок не провалився, якщо _build ще немає
+
+    - name: Build Sphinx documentation
+      run: |
         cd docs
         make html
       env:
-        # Встановлюємо PYTHONPATH, щоб Sphinx міг знайти ваші модулі Python
-        # '..' означає перейти на один рівень вгору від папки 'docs' (тобто до кореня репозиторію)
         PYTHONPATH: ${{ github.workspace }}
 
-    - name: Setup Pages # Крок: Налаштування середовища GitHub Pages
+    - name: Verify build output exists # Крок для налагодження: перевірка наявності папки
+      run: |
+        echo "Verifying docs/_build/html directory after build:"
+        ls -la docs/_build/html/
+        test -d docs/_build/html/ # Ця команда провалить крок, якщо директорії немає
+      # Якщо цей крок провалиться, це означає, що Sphinx таки не створив папку,
+      # або вона була видалена.
+
+    - name: Setup Pages
       uses: actions/configure-pages@v4
 
-    - name: Upload artifact # Крок: Завантаження згенерованої документації як артефакту
+    - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
         path: 'docs/_build/html' # Шлях до згенерованих HTML-файлів
 
-  # Завдання для розгортання документації на GitHub Pages
   deploy:
     environment:
-      name: github-pages # Ім'я середовища розгортання (стандартне для GitHub Pages)
-      url: ${{ steps.deployment.outputs.page_url }} # URL вашої сторінки
-    runs-on: ubuntu-latest # Виконуємо на Ubuntu
-    needs: build # Це завдання залежить від успішного виконання завдання 'build'
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
     steps:
-      - name: Deploy to GitHub Pages # Крок: Розгортання на GitHub Pages
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
