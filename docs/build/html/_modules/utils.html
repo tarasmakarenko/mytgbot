@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="uk" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>utils &mdash; Telegram Bot для Судових Установ 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=25fcb8f5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Індекс" href="../genindex.html" />
+    <link rel="search" title="Пошук" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Telegram Bot для Судових Установ
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Зміст:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../bot.html">Модуль Bot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../handlers.html">Модуль Handlers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../keyboards.html">Модуль Keyboards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utils.html">Модуль Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Telegram Bot для Судових Установ</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Модуль утиліт для Telegram-бота.</span>
+
+<span class="sd">Містить допоміжні функції для роботи з файлами JSON (зберігання та читання даних),</span>
+<span class="sd">генерації дат і часу, перевірки прав адміністратора та управління мовними налаштуваннями.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span> <span class="c1"># Стандартна бібліотека</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span> <span class="c1"># Стандартна бібліотека</span>
+
+<div class="viewcode-block" id="load_language">
+<a class="viewcode-back" href="../utils.html#utils.load_language">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_language</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Завантажує обрану мову для користувача з файлу languages.json.</span>
+
+<span class="sd">    Якщо файл `languages.json` не знайдено або він не є дійсним JSON,</span>
+<span class="sd">    або якщо мова для конкретного користувача не збережена,</span>
+<span class="sd">    повертає українську мову (&#39;uk&#39;) за замовчуванням.</span>
+
+<span class="sd">    :param user_id: Унікальний ідентифікатор користувача Telegram.</span>
+<span class="sd">    :type user_id: int</span>
+<span class="sd">    :returns: Код мови (&#39;uk&#39; або &#39;en&#39;).</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;languages.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">user_id</span><span class="p">),</span> <span class="s2">&quot;uk&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">):</span>
+        <span class="c1"># Ловимо конкретні винятки, якщо файл не знайдено або він не є дійсним JSON</span>
+        <span class="k">return</span> <span class="s2">&quot;uk&quot;</span></div>
+
+
+<div class="viewcode-block" id="set_language">
+<a class="viewcode-back" href="../utils.html#utils.set_language">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_language</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">lang</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Зберігає обрану мову для користувача у файлі languages.json.</span>
+
+<span class="sd">    Якщо файл `languages.json` не існує або пошкоджений, він буде створений</span>
+<span class="sd">    або перевизначений.</span>
+
+<span class="sd">    :param user_id: Унікальний ідентифікатор користувача Telegram.</span>
+<span class="sd">    :type user_id: int</span>
+<span class="sd">    :param lang: Код мови для збереження (&#39;uk&#39; або &#39;en&#39;).</span>
+<span class="sd">    :type lang: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;languages.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">):</span>
+        <span class="k">pass</span> <span class="c1"># Файл може не існувати або бути пустим, і це нормально для першого запису</span>
+
+    <span class="n">data</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">user_id</span><span class="p">)]</span> <span class="o">=</span> <span class="n">lang</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;languages.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">file_handle</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="is_admin">
+<a class="viewcode-back" href="../utils.html#utils.is_admin">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_admin</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Перевіряє, чи є користувач адміністратором, згідно з файлом admins.json.</span>
+
+<span class="sd">    Читає список ID адміністраторів з `admins.json`. Якщо файл не знайдено</span>
+<span class="sd">    або він пошкоджений, повертає False (користувач не є адміністратором).</span>
+
+<span class="sd">    :param user_id: Унікальний ідентифікатор користувача Telegram.</span>
+<span class="sd">    :type user_id: int</span>
+<span class="sd">    :returns: True, якщо користувач є адміністратором, False - в іншому випадку.</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;admins.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+            <span class="n">admins</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">admins</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span> <span class="c1"># Якщо файл не знайдено або він пошкоджений, адміністраторів немає</span></div>
+
+
+<div class="viewcode-block" id="get_faq_answer">
+<a class="viewcode-back" href="../utils.html#utils.get_faq_answer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_faq_answer</span><span class="p">(</span><span class="n">lang</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Отримує відповідь на питання з файлу faq.json для обраної мови.</span>
+
+<span class="sd">    Читає базу питань та відповідей з `faq.json`. Якщо питання не знайдено</span>
+<span class="sd">    для вказаної мови або файл пошкоджений, повертає повідомлення про помилку.</span>
+
+<span class="sd">    :param lang: Код мови (&#39;uk&#39; або &#39;en&#39;).</span>
+<span class="sd">    :type lang: str</span>
+<span class="sd">    :param question: Текст питання, на яке потрібно знайти відповідь.</span>
+<span class="sd">    :type question: str</span>
+<span class="sd">    :returns: Текст відповіді на питання або повідомлення про помилку.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;faq.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">question</span><span class="p">,</span> <span class="s2">&quot;⚠️ Вибачте, відповіді не знайдено.&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;⚠️ Вибачте, сталася помилка при завантаженні FAQ.&quot;</span></div>
+
+
+<div class="viewcode-block" id="get_court_info">
+<a class="viewcode-back" href="../utils.html#utils.get_court_info">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_court_info</span><span class="p">(</span><span class="n">lang</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Отримує інформацію про суд з файлу court_info.json для обраної мови.</span>
+
+<span class="sd">    Читає контактну та загальну інформацію про судову установу з `court_info.json`.</span>
+<span class="sd">    Якщо файл пошкоджений або інформація недоступна, повертає словник з</span>
+<span class="sd">    повідомленнями про недоступність.</span>
+
+<span class="sd">    :param lang: Код мови (&#39;uk&#39; або &#39;en&#39;).</span>
+<span class="sd">    :type lang: str</span>
+<span class="sd">    :returns: Словник з інформацією про суд (адреса, графік, телефон, email).</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;court_info.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;Інформація недоступна&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;work_time&quot;</span><span class="p">:</span> <span class="s2">&quot;Інформація недоступна&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;phone&quot;</span><span class="p">:</span> <span class="s2">&quot;Інформація недоступна&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;Інформація недоступна&quot;</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="get_available_dates">
+<a class="viewcode-back" href="../utils.html#utils.get_available_dates">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_available_dates</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Генерує список доступних дат для запису.</span>
+
+<span class="sd">    Повертає список рядків з датами (у форматі YYYY-MM-DD)</span>
+<span class="sd">    наступних 14 календарних днів, виключаючи вихідні (суботу та неділю).</span>
+
+<span class="sd">    :returns: Список доступних дат.</span>
+<span class="sd">    :rtype: list[str]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">today</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="n">dates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">day_offset</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">14</span><span class="p">):</span>
+        <span class="n">current_date</span> <span class="o">=</span> <span class="n">today</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">day_offset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_date</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># Понеділок (0) - П&#39;ятниця (4)</span>
+            <span class="n">dates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">current_date</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">dates</span></div>
+
+
+<div class="viewcode-block" id="get_available_times_for_date">
+<a class="viewcode-back" href="../utils.html#utils.get_available_times_for_date">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_available_times_for_date</span><span class="p">(</span><span class="n">selected_date</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Генерує список доступних часових слотів для вибраної дати.</span>
+
+<span class="sd">    Формує список часу з 9:00 до 16:00 (з кроком в 1 годину),</span>
+<span class="sd">    виключаючи 13:00 (обідня перерва).</span>
+
+<span class="sd">    :param selected_date: Вибрана дата у форматі YYYY-MM-DD.</span>
+<span class="sd">    :type selected_date: str</span>
+<span class="sd">    :returns: Список доступних часових слотів у форматі &quot;YYYY-MM-DD HH:MM&quot;.</span>
+<span class="sd">    :rtype: list[str]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">hour</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">17</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">hour</span> <span class="o">==</span> <span class="mi">13</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">selected_date</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">hour</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:00&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">times</span></div>
+
+
+<div class="viewcode-block" id="save_appointment">
+<a class="viewcode-back" href="../utils.html#utils.save_appointment">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_appointment</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Зберігає інформацію про запис на консультацію до файлу appointments.json.</span>
+
+<span class="sd">    Додає новий запис (user_id, ПІБ, дата та час) до існуючого списку записів.</span>
+<span class="sd">    Якщо файл `appointments.json` не існує або пошкоджений, він буде створений</span>
+<span class="sd">    або перевизначений.</span>
+
+<span class="sd">    :param user_id: Унікальний ідентифікатор користувача Telegram.</span>
+<span class="sd">    :type user_id: int</span>
+<span class="sd">    :param name: Повне ім&#39;я (ПІБ) користувача, який записується.</span>
+<span class="sd">    :type name: str</span>
+<span class="sd">    :param time: Вибраний час запису у форматі &quot;YYYY-MM-DD HH:MM&quot;.</span>
+<span class="sd">    :type time: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;appointments.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">):</span>
+        <span class="k">pass</span> <span class="c1"># Файл може не існувати або бути пустим, і це нормально для першого запису</span>
+
+    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="n">user_id</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">time</span><span class="p">})</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;appointments.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">file_handle</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_appointments_for_admin">
+<a class="viewcode-back" href="../utils.html#utils.get_appointments_for_admin">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_appointments_for_admin</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Отримує відформатований список всіх записів для адміністратора.</span>
+
+<span class="sd">    Читає всі записи з `appointments.json` та повертає їх у вигляді</span>
+<span class="sd">    одного рядка, де кожен запис відображений на новому рядку.</span>
+
+<span class="sd">    :returns: Рядок з усіма записами або повідомлення про їх відсутність.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;appointments.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Немає записів.&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;— </span><span class="si">{</span><span class="n">record</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">record</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Немає записів.&quot;</span></div>
+
+
+<div class="viewcode-block" id="get_appointments_for_user">
+<a class="viewcode-back" href="../utils.html#utils.get_appointments_for_user">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_appointments_for_user</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Отримує відформатований список записів для конкретного користувача.</span>
+
+<span class="sd">    (Ця функція була у вихідному коді, але наразі не використовується</span>
+<span class="sd">    безпосередньо в обробниках бота для відображення користувачеві його власних записів.</span>
+<span class="sd">    Повертає загальний список зайнятих часів, як у вихідному коді.)</span>
+
+<span class="sd">    :returns: Рядок з усіма зайнятими часами або повідомлення про їх відсутність.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;appointments.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
+        <span class="c1"># Фільтруємо записи по user_id, якщо це необхідно для відображення користувачеві</span>
+        <span class="c1"># Наразі просто повертаємо список зайнятих часів, як у вихідному коді</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;— </span><span class="si">{</span><span class="n">record</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> ❌ Зайнято&quot;</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;No appointments yet.&quot;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Makarenko Taras.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

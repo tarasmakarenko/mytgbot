@@ -1,0 +1,409 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="uk" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>handlers &mdash; Telegram Bot для Судових Установ 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=25fcb8f5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Індекс" href="../genindex.html" />
+    <link rel="search" title="Пошук" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Telegram Bot для Судових Установ
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Зміст:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../bot.html">Модуль Bot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../handlers.html">Модуль Handlers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../keyboards.html">Модуль Keyboards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utils.html">Модуль Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Telegram Bot для Судових Установ</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">handlers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for handlers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Модуль для обробки команд та повідомлень користувача в Telegram-боті.</span>
+
+<span class="sd">Містить функції-обробники для різних сценаріїв взаємодії,</span>
+<span class="sd">таких як запуск бота, вибір мови, відображення інформації,</span>
+<span class="sd">а також багатоетапний діалог для запису на консультацію.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span> <span class="c1"># Стандартна бібліотека</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">telegram</span><span class="w"> </span><span class="kn">import</span> <span class="n">Update</span> <span class="c1"># Стороння бібліотека</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">telegram.ext</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span> <span class="c1"># Стороння бібліотека</span>
+    <span class="n">CommandHandler</span><span class="p">,</span> <span class="n">MessageHandler</span><span class="p">,</span> <span class="n">CallbackQueryHandler</span><span class="p">,</span>
+    <span class="n">ContextTypes</span><span class="p">,</span> <span class="n">ConversationHandler</span><span class="p">,</span> <span class="n">filters</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span> <span class="c1"># Локальний модуль</span>
+    <span class="n">load_language</span><span class="p">,</span> <span class="n">set_language</span><span class="p">,</span> <span class="n">get_faq_answer</span><span class="p">,</span> <span class="n">get_court_info</span><span class="p">,</span>
+    <span class="n">get_available_dates</span><span class="p">,</span> <span class="n">get_available_times_for_date</span><span class="p">,</span>
+    <span class="n">save_appointment</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keyboards</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span> <span class="c1"># Локальний модуль</span>
+    <span class="n">get_main_menu</span><span class="p">,</span> <span class="n">get_language_keyboard</span><span class="p">,</span> <span class="n">get_faq_keyboard</span><span class="p">,</span> <span class="n">get_inline_keyboard</span>
+<span class="p">)</span>
+
+<span class="c1"># Визначення станів для ConversationHandler</span>
+<span class="n">LANG_SELECT</span><span class="p">,</span> <span class="n">ASK_NAME</span><span class="p">,</span> <span class="n">ASK_DATE</span><span class="p">,</span> <span class="n">ASK_TIME</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+<div class="viewcode-block" id="start">
+<a class="viewcode-back" href="../handlers.html#handlers.start">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Обробник команди /start.</span>
+
+<span class="sd">    Надсилає вітальне повідомлення та пропонує користувачеві обрати мову інтерфейсу</span>
+<span class="sd">    за допомогою інлайн-клавіатури. Це початкова точка входу в бота.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення (повідомлення).</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    :returns: Наступний стан для ConversationHandler.</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span>
+        <span class="s2">&quot;🌐 Оберіть мову / Choose language:&quot;</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="n">get_language_keyboard</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">LANG_SELECT</span></div>
+
+
+<div class="viewcode-block" id="language_selected">
+<a class="viewcode-back" href="../handlers.html#handlers.language_selected">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">language_selected</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Обробник вибору мови.</span>
+
+<span class="sd">    Зберігає обрану мову користувача (українську або англійську)</span>
+<span class="sd">    та відображає головне меню бота відповідно до цього вибору.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення (callback_query).</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    :returns: Наступний стан для ConversationHandler, завершуючи вибір мови.</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lang</span> <span class="o">=</span> <span class="n">update</span><span class="o">.</span><span class="n">callback_query</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">update</span><span class="o">.</span><span class="n">effective_user</span><span class="o">.</span><span class="n">id</span>
+    <span class="n">set_language</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">lang</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">callback_query</span><span class="o">.</span><span class="n">answer</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">callback_query</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span>
+        <span class="s2">&quot;✅ Мову встановлено!&quot;</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="n">get_main_menu</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">ConversationHandler</span><span class="o">.</span><span class="n">END</span></div>
+
+
+<div class="viewcode-block" id="show_faq">
+<a class="viewcode-back" href="../handlers.html#handlers.show_faq">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">show_faq</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Обробник для показу списку поширених питань (FAQ).</span>
+
+<span class="sd">    Відправляє користувачеві клавіатуру з доступними питаннями FAQ</span>
+<span class="sd">    відповідно до обраної мови.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення.</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lang</span> <span class="o">=</span> <span class="n">load_language</span><span class="p">(</span><span class="n">update</span><span class="o">.</span><span class="n">effective_user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="s2">&quot;❓ Оберіть питання:&quot;</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="n">get_faq_keyboard</span><span class="p">(</span><span class="n">lang</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="answer_faq">
+<a class="viewcode-back" href="../handlers.html#handlers.answer_faq">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">answer_faq</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Обробник для надання відповіді на вибране питання з FAQ.</span>
+
+<span class="sd">    Отримує текст питання, знаходить відповідь у базі знань</span>
+<span class="sd">    (faq.json) та відправляє її користувачеві.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення (повідомлення).</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lang</span> <span class="o">=</span> <span class="n">load_language</span><span class="p">(</span><span class="n">update</span><span class="o">.</span><span class="n">effective_user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">question</span> <span class="o">=</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">text</span>
+    <span class="n">answer</span> <span class="o">=</span> <span class="n">get_faq_answer</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="n">question</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="n">answer</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="n">get_main_menu</span><span class="p">(</span><span class="n">lang</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="show_court_info">
+<a class="viewcode-back" href="../handlers.html#handlers.show_court_info">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">show_court_info</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Обробник для надання інформації про судову установу.</span>
+
+<span class="sd">    Відправляє користувачеві контактну та загальну інформацію про суд</span>
+<span class="sd">    (адреса, графік роботи, телефон, email) відповідно до обраної мови.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення.</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lang</span> <span class="o">=</span> <span class="n">load_language</span><span class="p">(</span><span class="n">update</span><span class="o">.</span><span class="n">effective_user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">get_court_info</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;📍 Адреса: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;address&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;🕒 Графік: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;work_time&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;📞 Телефон: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;phone&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;✉️ Email: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="show_court_schedule">
+<a class="viewcode-back" href="../handlers.html#handlers.show_court_schedule">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">show_court_schedule</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Обробник для відображення розкладу судових засідань.</span>
+
+<span class="sd">    Завантажує інформацію про розклад з court_schedule.json</span>
+<span class="sd">    та відправляє її користувачеві у структурованому вигляді.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення.</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;court_schedule.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;📅 Розклад засідань:</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> – Справа </span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;case&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">,&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; Суддя </span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;judge&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="show_contacts">
+<a class="viewcode-back" href="../handlers.html#handlers.show_contacts">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">show_contacts</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Обробник для надання контактної інформації інших установ.</span>
+
+<span class="sd">    Завантажує контактну інформацію з contacts.json</span>
+<span class="sd">    та відправляє її користувачеві відповідно до обраної мови.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення.</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lang</span> <span class="o">=</span> <span class="n">load_language</span><span class="p">(</span><span class="n">update</span><span class="o">.</span><span class="n">effective_user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;contacts.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;📞 Контакти інших установ:</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">for</span> <span class="n">contact</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;📌 </span><span class="si">{</span><span class="n">contact</span><span class="p">[</span><span class="s1">&#39;org&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> — </span><span class="si">{</span><span class="n">contact</span><span class="p">[</span><span class="s1">&#39;phone&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ask_name">
+<a class="viewcode-back" href="../handlers.html#handlers.ask_name">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ask_name</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Початок діалогу запису на консультацію.</span>
+
+<span class="sd">    Запитує у користувача його ПІБ для подальшого запису.</span>
+<span class="sd">    Переводить діалог у стан ASK_NAME.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення (повідомлення).</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    :returns: Наступний стан діалогу.</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="s2">&quot;📝 Введіть ПІБ для запису:&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ASK_NAME</span></div>
+
+
+<div class="viewcode-block" id="ask_date">
+<a class="viewcode-back" href="../handlers.html#handlers.ask_date">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ask_date</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Продовження діалогу запису на консультацію.</span>
+
+<span class="sd">    Зберігає введене користувачем ПІБ та пропонує доступні дати</span>
+<span class="sd">    для запису за допомогою інлайн-клавіатури. Переводить діалог у стан ASK_DATE.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення (повідомлення з ПІБ).</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення, зберігає user_data.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    :returns: Наступний стан діалогу.</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">context</span><span class="o">.</span><span class="n">user_data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">text</span>
+    <span class="n">dates</span> <span class="o">=</span> <span class="n">get_available_dates</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="s2">&quot;📅 Оберіть дату:&quot;</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="n">get_inline_keyboard</span><span class="p">(</span><span class="n">dates</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ASK_DATE</span></div>
+
+
+<div class="viewcode-block" id="ask_time">
+<a class="viewcode-back" href="../handlers.html#handlers.ask_time">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ask_time</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Продовження діалогу запису на консультацію.</span>
+
+<span class="sd">    Зберігає обрану дату та пропонує доступні часові слоти</span>
+<span class="sd">    для цієї дати за допомогою інлайн-клавіатури. Переводить діалог у стан ASK_TIME.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення (callback_query з датою).</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення, зберігає user_data.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    :returns: Наступний стан діалогу.</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">selected_date</span> <span class="o">=</span> <span class="n">update</span><span class="o">.</span><span class="n">callback_query</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">context</span><span class="o">.</span><span class="n">user_data</span><span class="p">[</span><span class="s2">&quot;selected_date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">selected_date</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="n">get_available_times_for_date</span><span class="p">(</span><span class="n">selected_date</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">callback_query</span><span class="o">.</span><span class="n">answer</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">callback_query</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="s2">&quot;⏰ Оберіть час:&quot;</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="n">get_inline_keyboard</span><span class="p">(</span><span class="n">times</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ASK_TIME</span></div>
+
+
+<div class="viewcode-block" id="confirm_time">
+<a class="viewcode-back" href="../handlers.html#handlers.confirm_time">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">confirm_time</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ContextTypes</span><span class="o">.</span><span class="n">DEFAULT_TYPE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Завершення діалогу запису на консультацію.</span>
+
+<span class="sd">    Зберігає повну інформацію про запис (ПІБ, дату, час) у appointments.json</span>
+<span class="sd">    та надсилає користувачеві підтвердження успішного запису. Завершує діалог.</span>
+
+<span class="sd">    :param update: Об&#39;єкт, що містить інформацію про вхідне оновлення (callback_query з часом).</span>
+<span class="sd">    :type update: telegram.Update</span>
+<span class="sd">    :param context: Об&#39;єкт контексту для поточного оновлення, містить user_data.</span>
+<span class="sd">    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE</span>
+<span class="sd">    :returns: Наступний стан діалогу, що сигналізує про його завершення.</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">update</span><span class="o">.</span><span class="n">effective_user</span><span class="o">.</span><span class="n">id</span>
+    <span class="n">lang</span> <span class="o">=</span> <span class="n">load_language</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">update</span><span class="o">.</span><span class="n">callback_query</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">user_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;Без імені&quot;</span><span class="p">)</span>
+    <span class="n">save_appointment</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">callback_query</span><span class="o">.</span><span class="n">answer</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">update</span><span class="o">.</span><span class="n">callback_query</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="s2">&quot;✅ Ви успішно записані!&quot;</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="n">get_main_menu</span><span class="p">(</span><span class="n">lang</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ConversationHandler</span><span class="o">.</span><span class="n">END</span></div>
+
+
+<div class="viewcode-block" id="register_handlers">
+<a class="viewcode-back" href="../handlers.html#handlers.register_handlers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_handlers</span><span class="p">(</span><span class="n">app</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Реєструє всі обробники в об&#39;єкті Telegram Application.</span>
+
+<span class="sd">    Ця функція додає CommandHandler для команди /start, ConversationHandler</span>
+<span class="sd">    для багатоетапного діалогу запису на консультацію, а також MessageHandler</span>
+<span class="sd">    та CallbackQueryHandler для обробки інших типів повідомлень та натискань кнопок.</span>
+
+<span class="sd">    :param app: Об&#39;єкт Application, до якого реєструються обробники.</span>
+<span class="sd">    :type app: telegram.ext.Application</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">conv_handler</span> <span class="o">=</span> <span class="n">ConversationHandler</span><span class="p">(</span>
+        <span class="n">entry_points</span><span class="o">=</span><span class="p">[</span><span class="n">MessageHandler</span><span class="p">(</span><span class="n">filters</span><span class="o">.</span><span class="n">Regex</span><span class="p">(</span><span class="s2">&quot;^(📝|📅) Запис&quot;</span><span class="p">),</span> <span class="n">ask_name</span><span class="p">)],</span>
+        <span class="n">states</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">LANG_SELECT</span><span class="p">:</span> <span class="p">[</span><span class="n">CallbackQueryHandler</span><span class="p">(</span><span class="n">language_selected</span><span class="p">)],</span>
+            <span class="n">ASK_NAME</span><span class="p">:</span> <span class="p">[</span><span class="n">MessageHandler</span><span class="p">(</span><span class="n">filters</span><span class="o">.</span><span class="n">TEXT</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">filters</span><span class="o">.</span><span class="n">COMMAND</span><span class="p">,</span> <span class="n">ask_date</span><span class="p">)],</span>
+            <span class="n">ASK_DATE</span><span class="p">:</span> <span class="p">[</span><span class="n">CallbackQueryHandler</span><span class="p">(</span><span class="n">ask_time</span><span class="p">)],</span>
+            <span class="n">ASK_TIME</span><span class="p">:</span> <span class="p">[</span><span class="n">CallbackQueryHandler</span><span class="p">(</span><span class="n">confirm_time</span><span class="p">)],</span>
+        <span class="p">},</span>
+        <span class="n">fallbacks</span><span class="o">=</span><span class="p">[]</span>
+    <span class="p">)</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="n">CommandHandler</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="n">start</span><span class="p">))</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="n">conv_handler</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="n">CallbackQueryHandler</span><span class="p">(</span><span class="n">language_selected</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;^(uk|en)$&quot;</span><span class="p">))</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="n">MessageHandler</span><span class="p">(</span><span class="n">filters</span><span class="o">.</span><span class="n">Regex</span><span class="p">(</span><span class="s2">&quot;^(❓ FAQ|❓ Поширені питання)$&quot;</span><span class="p">),</span> <span class="n">show_faq</span><span class="p">))</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="n">MessageHandler</span><span class="p">(</span><span class="n">filters</span><span class="o">.</span><span class="n">Regex</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^(Як|How).*&quot;</span><span class="p">),</span> <span class="n">answer_faq</span><span class="p">))</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="n">MessageHandler</span><span class="p">(</span><span class="n">filters</span><span class="o">.</span><span class="n">Regex</span><span class="p">(</span><span class="s2">&quot;^(ℹ️|📍)&quot;</span><span class="p">),</span> <span class="n">show_court_info</span><span class="p">))</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="n">MessageHandler</span><span class="p">(</span>
+        <span class="n">filters</span><span class="o">.</span><span class="n">Regex</span><span class="p">(</span><span class="s2">&quot;^(🗓 Календар засідань|🗓 Hearing Calendar)$&quot;</span><span class="p">),</span>
+        <span class="n">show_court_schedule</span>
+    <span class="p">))</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="n">MessageHandler</span><span class="p">(</span>
+        <span class="n">filters</span><span class="o">.</span><span class="n">Regex</span><span class="p">(</span><span class="s2">&quot;^(📞 Контакти інших установ|📞 Other Institutions)$&quot;</span><span class="p">),</span>
+        <span class="n">show_contacts</span>
+    <span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Makarenko Taras.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

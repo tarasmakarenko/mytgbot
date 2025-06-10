@@ -1,0 +1,309 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="uk" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Модуль Utils &mdash; Telegram Bot для Судових Установ 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=25fcb8f5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Індекс" href="genindex.html" />
+    <link rel="search" title="Пошук" href="search.html" />
+    <link rel="prev" title="Модуль Keyboards" href="keyboards.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Telegram Bot для Судових Установ
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Зміст:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bot.html">Модуль Bot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="handlers.html">Модуль Handlers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="keyboards.html">Модуль Keyboards</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Модуль Utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#utils.get_appointments_for_admin"><code class="docutils literal notranslate"><span class="pre">get_appointments_for_admin()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.get_appointments_for_user"><code class="docutils literal notranslate"><span class="pre">get_appointments_for_user()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.get_available_dates"><code class="docutils literal notranslate"><span class="pre">get_available_dates()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.get_available_times_for_date"><code class="docutils literal notranslate"><span class="pre">get_available_times_for_date()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.get_court_info"><code class="docutils literal notranslate"><span class="pre">get_court_info()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.get_faq_answer"><code class="docutils literal notranslate"><span class="pre">get_faq_answer()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.is_admin"><code class="docutils literal notranslate"><span class="pre">is_admin()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.load_language"><code class="docutils literal notranslate"><span class="pre">load_language()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.save_appointment"><code class="docutils literal notranslate"><span class="pre">save_appointment()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.set_language"><code class="docutils literal notranslate"><span class="pre">set_language()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Telegram Bot для Судових Установ</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">&lt;no title&gt;</a></li>
+      <li class="breadcrumb-item active">Модуль Utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-utils">
+<span id="utils"></span><h1>Модуль Utils<a class="headerlink" href="#module-utils" title="Link to this heading"></a></h1>
+<p>Модуль утиліт для Telegram-бота.</p>
+<p>Містить допоміжні функції для роботи з файлами JSON (зберігання та читання даних),
+генерації дат і часу, перевірки прав адміністратора та управління мовними налаштуваннями.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.get_appointments_for_admin">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">get_appointments_for_admin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/utils.html#get_appointments_for_admin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.get_appointments_for_admin" title="Link to this definition"></a></dt>
+<dd><p>Отримує відформатований список всіх записів для адміністратора.</p>
+<p>Читає всі записи з <cite>appointments.json</cite> та повертає їх у вигляді
+одного рядка, де кожен запис відображений на новому рядку.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Повертає<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Рядок з усіма записами або повідомлення про їх відсутність.</p>
+</dd>
+<dt class="field-even">Тип повернення<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.get_appointments_for_user">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">get_appointments_for_user</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/utils.html#get_appointments_for_user"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.get_appointments_for_user" title="Link to this definition"></a></dt>
+<dd><p>Отримує відформатований список записів для конкретного користувача.</p>
+<p>(Ця функція була у вихідному коді, але наразі не використовується
+безпосередньо в обробниках бота для відображення користувачеві його власних записів.
+Повертає загальний список зайнятих часів, як у вихідному коді.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Повертає<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Рядок з усіма зайнятими часами або повідомлення про їх відсутність.</p>
+</dd>
+<dt class="field-even">Тип повернення<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.get_available_dates">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">get_available_dates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/utils.html#get_available_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.get_available_dates" title="Link to this definition"></a></dt>
+<dd><p>Генерує список доступних дат для запису.</p>
+<p>Повертає список рядків з датами (у форматі YYYY-MM-DD)
+наступних 14 календарних днів, виключаючи вихідні (суботу та неділю).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Повертає<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Список доступних дат.</p>
+</dd>
+<dt class="field-even">Тип повернення<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.get_available_times_for_date">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">get_available_times_for_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/utils.html#get_available_times_for_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.get_available_times_for_date" title="Link to this definition"></a></dt>
+<dd><p>Генерує список доступних часових слотів для вибраної дати.</p>
+<p>Формує список часу з 9:00 до 16:00 (з кроком в 1 годину),
+виключаючи 13:00 (обідня перерва).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметри<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>selected_date</strong> (<em>str</em>) – Вибрана дата у форматі YYYY-MM-DD.</p>
+</dd>
+<dt class="field-even">Повертає<span class="colon">:</span></dt>
+<dd class="field-even"><p>Список доступних часових слотів у форматі «YYYY-MM-DD HH:MM».</p>
+</dd>
+<dt class="field-odd">Тип повернення<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.get_court_info">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">get_court_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/utils.html#get_court_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.get_court_info" title="Link to this definition"></a></dt>
+<dd><p>Отримує інформацію про суд з файлу court_info.json для обраної мови.</p>
+<p>Читає контактну та загальну інформацію про судову установу з <cite>court_info.json</cite>.
+Якщо файл пошкоджений або інформація недоступна, повертає словник з
+повідомленнями про недоступність.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметри<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lang</strong> (<em>str</em>) – Код мови („uk“ або „en“).</p>
+</dd>
+<dt class="field-even">Повертає<span class="colon">:</span></dt>
+<dd class="field-even"><p>Словник з інформацією про суд (адреса, графік, телефон, email).</p>
+</dd>
+<dt class="field-odd">Тип повернення<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.get_faq_answer">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">get_faq_answer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/utils.html#get_faq_answer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.get_faq_answer" title="Link to this definition"></a></dt>
+<dd><p>Отримує відповідь на питання з файлу faq.json для обраної мови.</p>
+<p>Читає базу питань та відповідей з <cite>faq.json</cite>. Якщо питання не знайдено
+для вказаної мови або файл пошкоджений, повертає повідомлення про помилку.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметри<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lang</strong> (<em>str</em>) – Код мови („uk“ або „en“).</p></li>
+<li><p><strong>question</strong> (<em>str</em>) – Текст питання, на яке потрібно знайти відповідь.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Повертає<span class="colon">:</span></dt>
+<dd class="field-even"><p>Текст відповіді на питання або повідомлення про помилку.</p>
+</dd>
+<dt class="field-odd">Тип повернення<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.is_admin">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">is_admin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/utils.html#is_admin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.is_admin" title="Link to this definition"></a></dt>
+<dd><p>Перевіряє, чи є користувач адміністратором, згідно з файлом admins.json.</p>
+<p>Читає список ID адміністраторів з <cite>admins.json</cite>. Якщо файл не знайдено
+або він пошкоджений, повертає False (користувач не є адміністратором).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметри<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>user_id</strong> (<em>int</em>) – Унікальний ідентифікатор користувача Telegram.</p>
+</dd>
+<dt class="field-even">Повертає<span class="colon">:</span></dt>
+<dd class="field-even"><p>True, якщо користувач є адміністратором, False - в іншому випадку.</p>
+</dd>
+<dt class="field-odd">Тип повернення<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.load_language">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">load_language</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/utils.html#load_language"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.load_language" title="Link to this definition"></a></dt>
+<dd><p>Завантажує обрану мову для користувача з файлу languages.json.</p>
+<p>Якщо файл <cite>languages.json</cite> не знайдено або він не є дійсним JSON,
+або якщо мова для конкретного користувача не збережена,
+повертає українську мову („uk“) за замовчуванням.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметри<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>user_id</strong> (<em>int</em>) – Унікальний ідентифікатор користувача Telegram.</p>
+</dd>
+<dt class="field-even">Повертає<span class="colon">:</span></dt>
+<dd class="field-even"><p>Код мови („uk“ або „en“).</p>
+</dd>
+<dt class="field-odd">Тип повернення<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.save_appointment">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">save_appointment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#save_appointment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.save_appointment" title="Link to this definition"></a></dt>
+<dd><p>Зберігає інформацію про запис на консультацію до файлу appointments.json.</p>
+<p>Додає новий запис (user_id, ПІБ, дата та час) до існуючого списку записів.
+Якщо файл <cite>appointments.json</cite> не існує або пошкоджений, він буде створений
+або перевизначений.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметри<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_id</strong> (<em>int</em>) – Унікальний ідентифікатор користувача Telegram.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Повне ім’я (ПІБ) користувача, який записується.</p></li>
+<li><p><strong>time</strong> (<em>str</em>) – Вибраний час запису у форматі «YYYY-MM-DD HH:MM».</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.set_language">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">set_language</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#set_language"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.set_language" title="Link to this definition"></a></dt>
+<dd><p>Зберігає обрану мову для користувача у файлі languages.json.</p>
+<p>Якщо файл <cite>languages.json</cite> не існує або пошкоджений, він буде створений
+або перевизначений.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметри<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_id</strong> (<em>int</em>) – Унікальний ідентифікатор користувача Telegram.</p></li>
+<li><p><strong>lang</strong> (<em>str</em>) – Код мови для збереження („uk“ або „en“).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="keyboards.html" class="btn btn-neutral float-left" title="Модуль Keyboards" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Makarenko Taras.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
