@@ -32,6 +32,8 @@ jobs:
         pip install sphinx sphinx-rtd-theme
 
     - name: Debugging: List contents and current directory
+      # Використовуємо багаторядковий синтаксис YAML з оператором '|'
+      # для виконання кількох команд у одному кроці 'run'.
       run: |
         echo "Current working directory before build:"
         pwd
@@ -43,6 +45,7 @@ jobs:
         ls -la for_test/
 
     - name: Build Sphinx documentation
+      # Виконуємо кілька команд у одному кроці 'run'.
       run: |
         # Спочатку переходимо до директорії docs/source
         cd docs/source
@@ -59,6 +62,7 @@ jobs:
         PYTHONPATH: ${{ github.workspace }}/for_test
 
     - name: Verify build output exists
+      # Виконуємо кілька команд у одному кроці 'run'.
       run: |
         echo "Verifying docs/_build/html directory after build:"
         ls -la docs/_build/html/
@@ -82,7 +86,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-
-
-
