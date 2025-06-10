@@ -8,7 +8,7 @@ name: Deploy Sphinx Docs to GitHub Pages
 on:
   push:
     branches:
-      - main # Змініть на 'master', якщо ваша основна гілка так називається
+      - master # Змініть на 'master', якщо ваша основна гілка так називається
 
 # Дозволяємо GitHub Pages читати вміст та розгортати сторінки
 permissions:
