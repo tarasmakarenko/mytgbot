@@ -1,0 +1,3 @@
+python-telegram-bot
+sphinx
+sphinx-rtd-theme
