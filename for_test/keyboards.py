@@ -4,8 +4,12 @@
 Містить функції для створення інлайн-клавіатур та клавіатур головного меню,
 що використовуються для взаємодії з користувачем.
 """
-import json # Стандартна бібліотека
-from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton # Стороння бібліотека
+import json
+import logging
+from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+
+# Створюємо логер для цього модуля
+logger = logging.getLogger(__name__)
 
 def get_language_keyboard() -> InlineKeyboardMarkup:
     """Генерує інлайн-клавіатуру для вибору мови.
@@ -16,6 +20,7 @@ def get_language_keyboard() -> InlineKeyboardMarkup:
     :returns: Об'єкт InlineKeyboardMarkup для вибору мови.
     :rtype: telegram.InlineKeyboardMarkup
     """
+    logger.debug("Generating language selection keyboard.")
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("Українська", callback_data="uk"),
          InlineKeyboardButton("English", callback_data="en")]
@@ -33,6 +38,7 @@ def get_main_menu(lang: str) -> ReplyKeyboardMarkup:
     :returns: Об'єкт ReplyKeyboardMarkup для головного меню.
     :rtype: telegram.ReplyKeyboardMarkup
     """
+    logger.debug(f"Generating main menu keyboard for language '{lang}'.")
     if lang == "en":
         return ReplyKeyboardMarkup(
             [["❓ FAQ", "📅 Appointment"],
@@ -58,9 +64,15 @@ def get_faq_keyboard(lang: str) -> ReplyKeyboardMarkup:
     :returns: Об'єкт ReplyKeyboardMarkup зі списком питань FAQ.
     :rtype: telegram.ReplyKeyboardMarkup
     """
-    with open("faq.json", "r", encoding="utf-8") as file_handle:
-        data = json.load(file_handle)
-    return ReplyKeyboardMarkup([[q] for q in data[lang].keys()], resize_keyboard=True)
+    logger.debug(f"Generating FAQ keyboard for language '{lang}'.")
+    try:
+        with open("faq.json", "r", encoding="utf-8") as file_handle:
+            data = json.load(file_handle)
+        return ReplyKeyboardMarkup([[q] for q in data[lang].keys()], resize_keyboard=True)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"ERR_KB_001: Failed to load faq.json for language '{lang}': {e}", exc_info=True)
+        # У випадку помилки, повертаємо порожню клавіатуру або меню за замовчуванням
+        return ReplyKeyboardMarkup([["Помилка завантаження FAQ"]], resize_keyboard=True)
 
 def get_inline_keyboard(options: list) -> InlineKeyboardMarkup:
     """Генерує інлайн-клавіатуру з динамічним списком опцій.
@@ -73,4 +85,6 @@ def get_inline_keyboard(options: list) -> InlineKeyboardMarkup:
     :returns: Об'єкт InlineKeyboardMarkup з динамічними опціями.
     :rtype: telegram.InlineKeyboardMarkup
     """
+    logger.debug(f"Generating inline keyboard with {len(options)} options.")
     return InlineKeyboardMarkup([[InlineKeyboardButton(opt, callback_data=opt)] for opt in options])
+
