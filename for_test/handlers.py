@@ -2,18 +2,19 @@
 Модуль для обробки команд та повідомлень користувача в Telegram-боті.
 Містить функції-обробники для різних сценаріїв взаємодії.
 """
-import json
-from telegram import Update
-from telegram.ext import (
+import json # Стандартна бібліотека
+
+from telegram import Update # Стороння бібліотека
+from telegram.ext import ( # Стороння бібліотека
     CommandHandler, MessageHandler, CallbackQueryHandler,
     ContextTypes, ConversationHandler, filters
 )
-from utils import (
+from utils import ( # Локальний модуль
     load_language, set_language, get_faq_answer, get_court_info,
     get_available_dates, get_available_times_for_date,
     save_appointment
 )
-from keyboards import (
+from keyboards import ( # Локальний модуль
     get_main_menu, get_language_keyboard, get_faq_keyboard, get_inline_keyboard
 )
 
@@ -78,8 +79,8 @@ async def show_court_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE
     """
     Обробник для відображення розкладу судових засідань.
     """
-    with open("court_schedule.json", "r", encoding="utf-8") as f:
-        data = json.load(f)
+    with open("court_schedule.json", "r", encoding="utf-8") as file_handle:
+        data = json.load(file_handle)
     msg = "📅 Розклад засідань:\n"
     for item in data:
         msg += (
@@ -93,8 +94,8 @@ async def show_contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     Обробник для надання контактної інформації інших установ.
     """
     lang = load_language(update.effective_user.id)
-    with open("contacts.json", "r", encoding="utf-8") as f:
-        data = json.load(f)
+    with open("contacts.json", "r", encoding="utf-8") as file_handle:
+        data = json.load(file_handle)
     entries = data.get(lang, [])
     msg = "📞 Контакти інших установ:\n"
     for contact in entries:
@@ -164,9 +165,14 @@ def register_handlers(app):
     app.add_handler(conv_handler)
     app.add_handler(CallbackQueryHandler(language_selected, pattern="^(uk|en)$"))
     app.add_handler(MessageHandler(filters.Regex("^(❓ FAQ|❓ Поширені питання)$"), show_faq))
-    # Використовуємо filters.Regex для виявлення питання та уникаємо "unreachable code"
-    app.add_handler(MessageHandler(filters.Regex(r"^(Як|How).*$"), answer_faq))
+    app.add_handler(MessageHandler(filters.Regex(r"^(Як|How).*"), answer_faq))
     app.add_handler(MessageHandler(filters.Regex("^(ℹ️|📍)"), show_court_info))
-    app.add_handler(MessageHandler(filters.Regex("^(🗓 Календар засідань|🗓 Hearing Calendar)$"), show_court_schedule))
-    app.add_handler(MessageHandler(filters.Regex("^(📞 Контакти інших установ|📞 Other Institutions)$"), show_contacts))
-
+    app.add_handler(MessageHandler(
+        filters.Regex("^(🗓 Календар засідань|🗓 Hearing Calendar)$"),
+        show_court_schedule
+    ))
+    app.add_handler(MessageHandler(
+        filters.Regex("^(📞 Контакти інших установ|📞 Other Institutions)$"),
+        show_contacts
+    ))
+# Додано фінальний порожній рядок

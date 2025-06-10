@@ -1,8 +1,8 @@
 """
 Модуль для генерації кастомних клавіатур для Telegram-бота.
 """
-import json
-from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+import json # Стандартна бібліотека
+from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton # Стороння бібліотека
 
 def get_language_keyboard() -> InlineKeyboardMarkup:
     """
@@ -35,8 +35,8 @@ def get_faq_keyboard(lang: str) -> ReplyKeyboardMarkup:
     """
     Генерує клавіатуру з поширеними питаннями для обраної мови.
     """
-    with open("faq.json", "r", encoding="utf-8") as f:
-        data = json.load(f)
+    with open("faq.json", "r", encoding="utf-8") as file_handle:
+        data = json.load(file_handle)
     return ReplyKeyboardMarkup([[q] for q in data[lang].keys()], resize_keyboard=True)
 
 def get_inline_keyboard(options: list) -> InlineKeyboardMarkup:
@@ -44,4 +44,4 @@ def get_inline_keyboard(options: list) -> InlineKeyboardMarkup:
     Генерує інлайн-клавіатуру з динамічним списком опцій.
     """
     return InlineKeyboardMarkup([[InlineKeyboardButton(opt, callback_data=opt)] for opt in options])
-
+# Додано фінальний порожній рядок

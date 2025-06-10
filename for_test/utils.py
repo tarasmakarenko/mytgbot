@@ -2,8 +2,8 @@
 Модуль утиліт для Telegram-бота.
 Містить допоміжні функції для роботи з файлами, датами та даними.
 """
-import json
-from datetime import datetime, timedelta
+import json # Стандартна бібліотека
+from datetime import datetime, timedelta # Стандартна бібліотека
 
 def load_language(user_id: int) -> str:
     """
@@ -11,8 +11,8 @@ def load_language(user_id: int) -> str:
     Повертає 'uk' за замовчуванням у разі помилки або відсутності даних.
     """
     try:
-        with open("languages.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with open("languages.json", "r", encoding="utf-8") as file_handle:
+            data = json.load(file_handle)
         return data.get(str(user_id), "uk")
     except (FileNotFoundError, json.JSONDecodeError):
         # Ловимо конкретні винятки, якщо файл не знайдено або він не є дійсним JSON
@@ -24,22 +24,22 @@ def set_language(user_id: int, lang: str):
     """
     data = {}
     try:
-        with open("languages.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with open("languages.json", "r", encoding="utf-8") as file_handle:
+            data = json.load(file_handle)
     except (FileNotFoundError, json.JSONDecodeError):
         pass # Файл може не існувати або бути пустим, і це нормально для першого запису
 
     data[str(user_id)] = lang
-    with open("languages.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    with open("languages.json", "w", encoding="utf-8") as file_handle:
+        json.dump(data, file_handle, ensure_ascii=False, indent=2)
 
 def is_admin(user_id: int) -> bool:
     """
     Перевіряє, чи є користувач адміністратором.
     """
     try:
-        with open("admins.json", "r", encoding="utf-8") as f:
-            admins = json.load(f)
+        with open("admins.json", "r", encoding="utf-8") as file_handle:
+            admins = json.load(file_handle)
         return user_id in admins
     except (FileNotFoundError, json.JSONDecodeError):
         return False # Якщо файл не знайдено або він пошкоджений, адміністраторів немає
@@ -49,8 +49,8 @@ def get_faq_answer(lang: str, question: str) -> str:
     Отримує відповідь на питання з файлу faq.json для обраної мови.
     """
     try:
-        with open("faq.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with open("faq.json", "r", encoding="utf-8") as file_handle:
+            data = json.load(file_handle)
         return data[lang].get(question, "⚠️ Вибачте, відповіді не знайдено.")
     except (FileNotFoundError, json.JSONDecodeError):
         return "⚠️ Вибачте, сталася помилка при завантаженні FAQ."
@@ -60,8 +60,8 @@ def get_court_info(lang: str) -> dict:
     Отримує інформацію про суд з файлу court_info.json для обраної мови.
     """
     try:
-        with open("court_info.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with open("court_info.json", "r", encoding="utf-8") as file_handle:
+            data = json.load(file_handle)
         return data[lang]
     except (FileNotFoundError, json.JSONDecodeError):
         return {
@@ -76,10 +76,9 @@ def get_available_dates() -> list:
     Генерує список доступних дат для запису (будні дні протягом 14 днів).
     """
     today = datetime.now().date()
-    # Створюємо список, переконуючись, що кожен елемент вміщується в ліміт рядка
     dates = []
-    for i in range(14):
-        current_date = today + timedelta(days=i)
+    for day_offset in range(14): # Перейменовано 'i' на 'day_offset'
+        current_date = today + timedelta(days=day_offset)
         if current_date.weekday() < 5:  # Понеділок (0) - П'ятниця (4)
             dates.append(str(current_date))
     return dates
@@ -93,7 +92,7 @@ def get_available_times_for_date(selected_date: str) -> list:
     for hour in range(9, 17):
         if hour == 13:
             continue
-        times.append(f"{selected_date} {hour:02d}:00") # Додаємо ":02d" для форматування годин як "09" замість "9"
+        times.append(f"{selected_date} {hour:02d}:00")
     return times
 
 def save_appointment(user_id: int, name: str, time: str):
@@ -102,25 +101,25 @@ def save_appointment(user_id: int, name: str, time: str):
     """
     data = []
     try:
-        with open("appointments.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with open("appointments.json", "r", encoding="utf-8") as file_handle:
+            data = json.load(file_handle)
     except (FileNotFoundError, json.JSONDecodeError):
         pass # Файл може не існувати або бути пустим, і це нормально для першого запису
 
     data.append({"user_id": user_id, "name": name, "time": time})
-    with open("appointments.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    with open("appointments.json", "w", encoding="utf-8") as file_handle:
+        json.dump(data, file_handle, ensure_ascii=False, indent=2)
 
 def get_appointments_for_admin() -> str:
     """
     Отримує список всіх записів для адміністратора.
     """
     try:
-        with open("appointments.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with open("appointments.json", "r", encoding="utf-8") as file_handle:
+            data = json.load(file_handle)
         if not data:
             return "Немає записів."
-        return "\n".join([f"— {r['name']}, {r['time']}" for r in data])
+        return "\n".join([f"— {record['name']}, {record['time']}" for record in data])
     except (FileNotFoundError, json.JSONDecodeError):
         return "Немає записів."
 
@@ -130,11 +129,11 @@ def get_appointments_for_user() -> str:
     (Ця функція була у вихідному коді, але не використовувалась у handlers.py)
     """
     try:
-        with open("appointments.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with open("appointments.json", "r", encoding="utf-8") as file_handle:
+            data = json.load(file_handle)
         # Фільтруємо записи по user_id, якщо це необхідно для відображення користувачеві
         # Наразі просто повертаємо список зайнятих часів, як у вихідному коді
-        return "\n".join([f"— {r['time']} ❌ Зайнято" for r in data])
+        return "\n".join([f"— {record['time']} ❌ Зайнято" for record in data])
     except (FileNotFoundError, json.JSONDecodeError):
         return "No appointments yet."
-
+# Додано фінальний порожній рядок
