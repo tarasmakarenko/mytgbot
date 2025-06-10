@@ -1,0 +1,14 @@
+{
+  "uk": {
+    "address": "м. Київ, вул. Прикладна, 12",
+    "work_time": "Пн-Пт 09:00-18:00, обід 13:00-13:45",
+    "phone": "+380441234567",
+    "email": "info@court.gov.ua"
+  },
+  "en": {
+    "address": "12 Prykladna Str., Kyiv",
+    "work_time": "Mon-Fri 09:00-18:00, lunch 13:00-13:45",
+    "phone": "+380441234567",
+    "email": "info@court.gov.ua"
+  }
+}

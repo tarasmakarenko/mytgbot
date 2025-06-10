@@ -1,0 +1,36 @@
+{
+  "uk": {
+    "Як подати заяву до суду?": "Заяву можна подати особисто, поштою або через систему 'Електронний суд'.",
+    "Як отримати копію судового рішення?": "Зверніться до канцелярії суду або скористайтеся електронним сервісом 'Судова влада України'.",
+    "Який строк розгляду справи?": "Зазвичай строк залежить від категорії справи, але суд зобов’язаний розглянути її у розумні строки.",
+    "Чи можна подати документи онлайн?": "Так, через портал 'Електронний суд'.",
+    "Як подати апеляцію?": "Апеляцію можна подати протягом 30 днів з моменту проголошення рішення.",
+    "Скільки коштує подати позов?": "Розмір судового збору залежить від типу справи та суми позову.",
+    "Хто має право на безоплатну правову допомогу?": "Особи з низьким доходом, учасники бойових дій, інваліди та інші пільгові категорії.",
+    "Як дізнатись про дату судового засідання?": "Дата засідання зазначена в повістці або доступна в електронному кабінеті.",
+    "Що робити, якщо я не можу прийти до суду?": "Потрібно заздалегідь повідомити суд і подати заяву про перенесення засідання.",
+    "Чи можу я представляти себе в суді самостійно?": "Так, громадяни мають право на самопредставництво без адвоката.",
+    "Як отримати виконавчий лист?": "Після набрання чинності рішенням суду ви можете подати заяву на видачу виконавчого листа.",
+    "Де знайти шаблони судових документів?": "Шаблони доступні на сайтах судів та у системі 'Електронний суд'.",
+    "Чи можу я подати колективний позов?": "Так, група осіб може подати спільну заяву до суду.",
+    "Що таке позовна давність?": "Це строк, протягом якого ви можете звернутися до суду для захисту свого права.",
+    "Чи можна звернутися до суду іноземцю?": "Так, іноземні громадяни мають право звертатися до судів України."
+  },
+  "en": {
+    "How to file a claim to the court?": "You can submit it in person, by mail, or via the 'Electronic Court' system.",
+    "How to get a copy of a court decision?": "Contact the court office or use the online service 'Judicial Authority of Ukraine'.",
+    "What is the usual timeframe for case consideration?": "It depends on the case category, but the court must consider it within a reasonable time.",
+    "Can I submit documents online?": "Yes, through the 'Electronic Court' portal.",
+    "How to file an appeal?": "You must file an appeal within 30 days from the date of the decision announcement.",
+    "How much does it cost to file a lawsuit?": "The court fee depends on the type of case and the amount of the claim.",
+    "Who is eligible for free legal aid?": "Low-income individuals, veterans, persons with disabilities, and other eligible categories.",
+    "How to find out the court hearing date?": "The date is indicated in the summons or available in your e-cabinet.",
+    "What if I cannot attend the court hearing?": "You should notify the court in advance and submit a request for rescheduling.",
+    "Can I represent myself in court?": "Yes, individuals have the right to self-representation without a lawyer.",
+    "How to get a writ of execution?": "After the decision becomes final, you may request the issuance of a writ of execution.",
+    "Where to find templates of court documents?": "Templates are available on court websites and in the 'Electronic Court' system.",
+    "Can I file a collective lawsuit?": "Yes, a group of individuals may file a joint claim.",
+    "What is the statute of limitations?": "It is the period during which you can apply to the court to protect your rights.",
+    "Can a foreigner apply to court in Ukraine?": "Yes, foreign citizens have the right to appeal to Ukrainian courts."
+  }
+}
