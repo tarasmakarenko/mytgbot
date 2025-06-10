@@ -1,6 +1,9 @@
 """
 Модуль для обробки команд та повідомлень користувача в Telegram-боті.
-Містить функції-обробники для різних сценаріїв взаємодії.
+
+Містить функції-обробники для різних сценаріїв взаємодії,
+таких як запуск бота, вибір мови, відображення інформації,
+а також багатоетапний діалог для запису на консультацію.
 """
 import json # Стандартна бібліотека
 
@@ -22,9 +25,17 @@ from keyboards import ( # Локальний модуль
 LANG_SELECT, ASK_NAME, ASK_DATE, ASK_TIME = range(4)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Обробник команди /start.
-    Пропонує користувачеві обрати мову інтерфейсу.
+    """Обробник команди /start.
+
+    Надсилає вітальне повідомлення та пропонує користувачеві обрати мову інтерфейсу
+    за допомогою інлайн-клавіатури. Це початкова точка входу в бота.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення (повідомлення).
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
+    :returns: Наступний стан для ConversationHandler.
+    :rtype: int
     """
     await update.message.reply_text(
         "🌐 Оберіть мову / Choose language:", reply_markup=get_language_keyboard()
@@ -32,9 +43,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return LANG_SELECT
 
 async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Обробник вибору мови.
-    Зберігає обрану мову та відображає головне меню.
+    """Обробник вибору мови.
+
+    Зберігає обрану мову користувача (українську або англійську)
+    та відображає головне меню бота відповідно до цього вибору.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення (callback_query).
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
+    :returns: Наступний стан для ConversationHandler, завершуючи вибір мови.
+    :rtype: int
     """
     lang = update.callback_query.data
     user_id = update.effective_user.id
@@ -46,15 +65,29 @@ async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     return ConversationHandler.END
 
 async def show_faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Обробник для показу списку поширених питань (FAQ).
+    """Обробник для показу списку поширених питань (FAQ).
+
+    Відправляє користувачеві клавіатуру з доступними питаннями FAQ
+    відповідно до обраної мови.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення.
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
     """
     lang = load_language(update.effective_user.id)
     await update.message.reply_text("❓ Оберіть питання:", reply_markup=get_faq_keyboard(lang))
 
 async def answer_faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Обробник для надання відповіді на вибране питання з FAQ.
+    """Обробник для надання відповіді на вибране питання з FAQ.
+
+    Отримує текст питання, знаходить відповідь у базі знань
+    (faq.json) та відправляє її користувачеві.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення (повідомлення).
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
     """
     lang = load_language(update.effective_user.id)
     question = update.message.text
@@ -62,8 +95,15 @@ async def answer_faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(answer, reply_markup=get_main_menu(lang))
 
 async def show_court_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Обробник для надання інформації про судову установу.
+    """Обробник для надання інформації про судову установу.
+
+    Відправляє користувачеві контактну та загальну інформацію про суд
+    (адреса, графік роботи, телефон, email) відповідно до обраної мови.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення.
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
     """
     lang = load_language(update.effective_user.id)
     info = get_court_info(lang)
@@ -76,8 +116,15 @@ async def show_court_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text)
 
 async def show_court_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Обробник для відображення розкладу судових засідань.
+    """Обробник для відображення розкладу судових засідань.
+
+    Завантажує інформацію про розклад з court_schedule.json
+    та відправляє її користувачеві у структурованому вигляді.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення.
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
     """
     with open("court_schedule.json", "r", encoding="utf-8") as file_handle:
         data = json.load(file_handle)
@@ -90,8 +137,15 @@ async def show_court_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_text(msg)
 
 async def show_contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Обробник для надання контактної інформації інших установ.
+    """Обробник для надання контактної інформації інших установ.
+
+    Завантажує контактну інформацію з contacts.json
+    та відправляє її користувачеві відповідно до обраної мови.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення.
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
     """
     lang = load_language(update.effective_user.id)
     with open("contacts.json", "r", encoding="utf-8") as file_handle:
@@ -103,17 +157,33 @@ async def show_contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg)
 
 async def ask_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Початок діалогу запису на консультацію.
-    Запитує ПІБ користувача.
+    """Початок діалогу запису на консультацію.
+
+    Запитує у користувача його ПІБ для подальшого запису.
+    Переводить діалог у стан ASK_NAME.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення (повідомлення).
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
+    :returns: Наступний стан діалогу.
+    :rtype: int
     """
     await update.message.reply_text("📝 Введіть ПІБ для запису:")
     return ASK_NAME
 
 async def ask_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Продовження діалогу запису.
-    Зберігає ПІБ та пропонує доступні дати.
+    """Продовження діалогу запису на консультацію.
+
+    Зберігає введене користувачем ПІБ та пропонує доступні дати
+    для запису за допомогою інлайн-клавіатури. Переводить діалог у стан ASK_DATE.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення (повідомлення з ПІБ).
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення, зберігає user_data.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
+    :returns: Наступний стан діалогу.
+    :rtype: int
     """
     context.user_data["name"] = update.message.text
     dates = get_available_dates()
@@ -121,9 +191,17 @@ async def ask_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ASK_DATE
 
 async def ask_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Продовження діалогу запису.
-    Зберігає дату та пропонує доступні часові слоти.
+    """Продовження діалогу запису на консультацію.
+
+    Зберігає обрану дату та пропонує доступні часові слоти
+    для цієї дати за допомогою інлайн-клавіатури. Переводить діалог у стан ASK_TIME.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення (callback_query з датою).
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення, зберігає user_data.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
+    :returns: Наступний стан діалогу.
+    :rtype: int
     """
     selected_date = update.callback_query.data
     context.user_data["selected_date"] = selected_date
@@ -133,9 +211,17 @@ async def ask_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ASK_TIME
 
 async def confirm_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Завершення діалогу запису.
-    Зберігає повну інформацію про запис та надсилає підтвердження.
+    """Завершення діалогу запису на консультацію.
+
+    Зберігає повну інформацію про запис (ПІБ, дату, час) у appointments.json
+    та надсилає користувачеві підтвердження успішного запису. Завершує діалог.
+
+    :param update: Об'єкт, що містить інформацію про вхідне оновлення (callback_query з часом).
+    :type update: telegram.Update
+    :param context: Об'єкт контексту для поточного оновлення, містить user_data.
+    :type context: telegram.ext.ContextTypes.DEFAULT_TYPE
+    :returns: Наступний стан діалогу, що сигналізує про його завершення.
+    :rtype: int
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
@@ -147,8 +233,14 @@ async def confirm_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     return ConversationHandler.END
 
 def register_handlers(app):
-    """
-    Реєструє всі обробники в Telegram Application.
+    """Реєструє всі обробники в об'єкті Telegram Application.
+
+    Ця функція додає CommandHandler для команди /start, ConversationHandler
+    для багатоетапного діалогу запису на консультацію, а також MessageHandler
+    та CallbackQueryHandler для обробки інших типів повідомлень та натискань кнопок.
+
+    :param app: Об'єкт Application, до якого реєструються обробники.
+    :type app: telegram.ext.Application
     """
     conv_handler = ConversationHandler(
         entry_points=[MessageHandler(filters.Regex("^(📝|📅) Запис"), ask_name)],
@@ -175,4 +267,3 @@ def register_handlers(app):
         filters.Regex("^(📞 Контакти інших установ|📞 Other Institutions)$"),
         show_contacts
     ))
-# Додано фінальний порожній рядок
