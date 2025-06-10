@@ -18,7 +18,7 @@ async def on_start(app):
 
     Виводить повідомлення про те, що бот успішно запущений.
 
-    :param app: Об'єкт Application, що  представляє екземпляр бота.
+    :param app: Об'єкт Application, що представляє екземпляр бота.
     :type app: telegram.ext.Application
     """
     print("✅ Бот запущено!")

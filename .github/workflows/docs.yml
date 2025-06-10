@@ -1,0 +1,66 @@
+# .github/workflows/docs.yml
+
+name: Deploy Sphinx Docs to GitHub Pages
+
+# Запуск робочого процесу при кожному push до гілки 'main'
+# Якщо ваша основна гілка називається 'master', змініть 'main' на 'master'
+# Якщо ви хочете розгортати документацію з іншої гілки (наприклад, 'develop'), змініть 'main'
+on:
+  push:
+    branches:
+      - main # Змініть на 'master', якщо ваша основна гілка так називається
+
+# Дозволяємо GitHub Pages читати вміст та розгортати сторінки
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # Завдання для збирання документації
+  build:
+    runs-on: ubuntu-latest # Використовуємо операційну систему Ubuntu для виконання завдання
+    steps:
+    - name: Checkout repository # Крок: Клонування вашого репозиторію
+      uses: actions/checkout@v4
+
+    - name: Set up Python # Крок: Налаштування Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9' # Виберіть версію Python, яку ви використовуєте (наприклад, 3.9)
+        cache: 'pip'
+
+    - name: Install dependencies # Крок: Встановлення залежностей (Sphinx та теми)
+      run: |
+        pip install sphinx sphinx-rtd-theme
+
+    - name: Build Sphinx documentation # Крок: Збирання документації за допомогою Sphinx
+      run: |
+        # Переходимо до директорії docs, де знаходиться Makefile
+        cd docs
+        make html
+      env:
+        # Встановлюємо PYTHONPATH, щоб Sphinx міг знайти ваші модулі Python
+        # '..' означає перейти на один рівень вгору від папки 'docs' (тобто до кореня репозиторію)
+        PYTHONPATH: ${{ github.workspace }}
+
+    - name: Setup Pages # Крок: Налаштування середовища GitHub Pages
+      uses: actions/configure-pages@v4
+
+    - name: Upload artifact # Крок: Завантаження згенерованої документації як артефакту
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: 'docs/_build/html' # Шлях до згенерованих HTML-файлів
+
+  # Завдання для розгортання документації на GitHub Pages
+  deploy:
+    environment:
+      name: github-pages # Ім'я середовища розгортання (стандартне для GitHub Pages)
+      url: ${{ steps.deployment.outputs.page_url }} # URL вашої сторінки
+    runs-on: ubuntu-latest # Виконуємо на Ubuntu
+    needs: build # Це завдання залежить від успішного виконання завдання 'build'
+    steps:
+      - name: Deploy to GitHub Pages # Крок: Розгортання на GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
