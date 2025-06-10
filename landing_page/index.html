@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="uk" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Телеграм-бот для надання відповідей | Бакалаврська робота</title>
+
+    <!-- Базове SEO та метатеги -->
+    <meta name="description" content="Цільова сторінка бакалаврської роботи: Телеграм-бот для надання відповідей на типові питання відвідувачів судових установ. Дослідження, мета, завдання та очікувані результати.">
+    <meta name="keywords" content="телеграм-бот, судова система, інформування, доступність правосуддя, автоматизація, бакалаврська робота, СумДУ">
+    <meta name="author" content="Макаренко Тарас">
+    <link rel="canonical" href="https://your-github-pages-url.com/">
+
+    <!-- Favicon набір (приклад) -->
+    <link rel="icon" href="https://placehold.co/32x32/000000/FFFFFF/png?text=B" type="image/png">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/000000/FFFFFF/png?text=B">
+    <link rel="manifest" href="/site.webmanifest"> <!-- Приклад: файл site.webmanifest для Progressive Web App -->
+
+    <!-- Open Graph теги для соціальних мереж -->
+    <meta property="og:title" content="Телеграм-бот для надання відповідей на типові питання відвідувачів судових установ">
+    <meta property="og:description" content="Цільова сторінка бакалаврської роботи: Телеграм-бот для надання відповідей на типові питання відвідувачів судових установ.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://your-github-pages-url.com/">
+    <meta property="og:image" content="https://placehold.co/1200x630/000000/FFFFFF/png?text=Telegram+Bot">
+    <meta property="og:image:alt" content="Графічне представлення Телеграм-бота">
+
+    <!-- Schema.org розмітка (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ResearchProject",
+      "name": "Телеграм-бот для надання відповідей на типові питання відвідувачів судових установ",
+      "description": "Бакалаврська робота, присвячена розробці та впровадженню інтелектуального Telegram-бота для ефективного інформування громадян у судовій сфері.",
+      "startDate": "2024-09-01",
+      "endDate": "2025-06-30",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://your-github-pages-url.com/"
+      },
+      "keywords": "телеграм-бот, судова система, інформування, доступність правосуддя, автоматизація",
+      "creator": {
+        "@type": "Person",
+        "name": "Макаренко Тарас"
+      },
+      "sponsor": {
+        "@type": "Organization",
+        "name": "Сумський державний університет"
+      },
+      "about": {
+        "@type": "GovernmentOrganization",
+        "name": "Судові установи України"
+      }
+    }
+    </script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* bg-slate-50 */
+            color: #1e293b; /* text-slate-800 */
+        }
+        /* Custom scrollbar for better aesthetics */
+        body::-webkit-scrollbar {
+            width: 8px;
+        }
+        body::-webkit-scrollbar-track {
+            background: #e2e8f0; /* slate-200 */
+        }
+        body::-webkit-scrollbar-thumb {
+            background-color: #94a3b8; /* slate-400 */
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="antialiased leading-relaxed">
+    <!-- Header Section -->
+    <header class="bg-white shadow-md py-4 px-6 md:px-12 flex justify-between items-center sticky top-0 z-50 rounded-b-lg">
+        <div class="flex items-center space-x-4">
+            <!-- Логотип університету -->
+            <img src="https://placehold.co/64x64/2a6d4e/ffffff?text=SumDU" alt="Логотип Сумського державного університету" class="h-16 w-16 rounded-lg shadow-md">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+                <span id="header-title-uk">Телеграм-бот для надання відповідей</span>
+                <span id="header-title-en" class="hidden">Telegram Bot for Answering Questions</span>
+            </h1>
+        </div>
+
+        <!-- Language Switcher -->
+        <div class="relative inline-block text-left">
+            <button id="lang-switcher-button" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200 ease-in-out" aria-haspopup="true" aria-expanded="true" aria-label="Змінити мову">
+                <span id="current-lang-display">UA</span>
+                <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            <div id="lang-menu" class="origin-top-right absolute right-0 mt-2 w-28 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10" role="menu" aria-orientation="vertical" aria-labelledby="lang-switcher-button">
+                <div class="py-1" role="none">
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 lang-option" data-lang="uk" role="menuitem">Українська</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 lang-option" data-lang="en" role="menuitem">English</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8 mt-6">
+        <!-- Hero Section: Title, Description, Keywords -->
+        <section id="introduction" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-8 md:p-12 rounded-xl shadow-lg mb-10 flex flex-col items-center text-center">
+            <h2 class="text-3xl md:text-5xl font-extrabold mb-4" id="project-title-main">
+                <span id="project-title-uk">Телеграм-бот для надання відповідей на типові питання відвідувачів судових установ</span>
+                <span id="project-title-en" class="hidden">Telegram Bot for Providing Answers to Typical Questions of Court Visitors</span>
+            </h2>
+            <p class="text-lg md:text-xl max-w-3xl mb-6 opacity-90" id="project-description">
+                <span id="project-description-uk">Ця бакалаврська робота присвячена розробці та програмній реалізації інтелектуального Telegram-бота, який підвищує ефективність інформування відвідувачів судових установ. Він забезпечує швидкі відповіді на типові питання, надає актуальну довідкову інформацію про суд та дозволяє записатися на консультацію.</span>
+                <span id="project-description-en" class="hidden">This bachelor's thesis focuses on the development and software implementation of an intelligent Telegram bot that enhances the efficiency of informing court visitors. It provides quick answers to typical questions, offers up-to-date court information, and allows scheduling consultations.</span>
+            </p>
+            <div class="text-sm md:text-base font-medium" id="keywords">
+                <span id="keywords-label-uk">Ключові слова:</span>
+                <span id="keywords-label-en" class="hidden">Keywords:</span>
+                <span class="inline-block bg-blue-700 rounded-full px-3 py-1 text-sm font-semibold text-white mr-2 mb-2">#телеграм_бот</span>
+                <span class="inline-block bg-blue-700 rounded-full px-3 py-1 text-sm font-semibold text-white mr-2 mb-2">#судова_система</span>
+                <span class="inline-block bg-blue-700 rounded-full px-3 py-1 text-sm font-semibold text-white mr-2 mb-2">#інформування</span>
+                <span class="inline-block bg-blue-700 rounded-full px-3 py-1 text-sm font-semibold text-white mr-2 mb-2">#доступність_правосуддя</span>
+                <span class="inline-block bg-blue-700 rounded-full px-3 py-1 text-sm font-semibold text-white mr-2 mb-2">#автоматизація</span>
+            </div>
+        </section>
+
+        <!-- Relevance Section -->
+        <section id="relevance" class="bg-white p-8 md:p-10 rounded-xl shadow-md mb-10">
+            <h3 class="text-2xl md:text-3xl font-semibold text-slate-800 mb-6 border-b-2 border-indigo-500 pb-2" id="relevance-title">
+                <span id="relevance-title-uk">Актуальність теми</span>
+                <span id="relevance-title-en" class="hidden">Relevance of the Topic</span>
+            </h3>
+            <p class="text-lg text-slate-700 leading-relaxed" id="relevance-content">
+                <span id="relevance-content-uk">Сучасна цифровізація вимагає вдосконалення механізмів інформування громадян у судовій сфері. Традиційні методи не завжди відповідають вимогам оперативності та зручності, що призводить до проблем з доступом до інформації та зниженням довіри до правосуддя. Використання Telegram-ботів дозволяє автоматизувати надання відповідей на типові запити та забезпечити цілодобовий доступ до необхідної інформації, що є вкрай актуальним завданням для оптимізації взаємодії громадян із судовими установами.</span>
+                <span id="relevance-content-en" class="hidden">Modern digitalization demands improving mechanisms for informing citizens in the judicial sphere. Traditional methods often fail to meet requirements for speed and convenience, leading to issues with information access and decreased public trust in justice. Utilizing Telegram bots allows for automating responses to typical inquiries and ensuring 24/7 access to necessary information, which is a highly relevant task for optimizing citizen interaction with judicial institutions.</span>
+            </p>
+        </section>
+
+        <!-- Goal and Tasks Section -->
+        <section id="goal-tasks" class="bg-white p-8 md:p-10 rounded-xl shadow-md mb-10">
+            <h3 class="text-2xl md:text-3xl font-semibold text-slate-800 mb-6 border-b-2 border-indigo-500 pb-2" id="goal-tasks-title">
+                <span id="goal-tasks-title-uk">Мета дослідження та основні завдання</span>
+                <span id="goal-tasks-title-en" class="hidden">Research Goal and Main Tasks</span>
+            </h3>
+            <div class="mb-6">
+                <h4 class="text-xl md:text-2xl font-medium text-slate-800 mb-3" id="goal-heading">
+                    <span id="goal-heading-uk">Мета дослідження:</span>
+                    <span id="goal-heading-en" class="hidden">Research Goal:</span>
+                </h4>
+                <p class="text-lg text-slate-700 leading-relaxed" id="goal-content">
+                    <span id="goal-content-uk">Розробка та програмна реалізація інтелектуального телеграм-бота, що підвищить ефективність інформування відвідувачів судових установ, надаючи відповіді на типові питання, актуальну довідкову інформацію про суд та можливість запису на консультацію.</span>
+                    <span id="goal-content-en" class="hidden">Development and software implementation of an intelligent Telegram bot to enhance the efficiency of informing court visitors by providing answers to typical questions, ensuring access to up-to-date court information, and offering the possibility to schedule consultations.</span>
+                </p>
+            </div>
+            <div>
+                <h4 class="text-xl md:text-2xl font-medium text-slate-800 mb-3" id="tasks-heading">
+                    <span id="tasks-heading-uk">Основні завдання:</span>
+                    <span id="tasks-heading-en" class="hidden">Main Tasks:</span>
+                </h4>
+                <ul class="list-disc list-inside text-lg text-slate-700 space-y-2">
+                    <li id="task1">
+                        <span id="task1-uk">Проаналізувати предметну область та існуючі способи інформування у судовій сфері.</span>
+                        <span id="task1-en" class="hidden">Analyze the subject area and existing methods of informing in the judicial sphere.</span>
+                    </li>
+                    <li id="task2">
+                        <span id="task2-uk">Розробити функціональні вимоги та архітектуру телеграм-бота.</span>
+                        <span id="task2-en" class="hidden">Develop functional requirements and architecture for the Telegram bot.</span>
+                    </li>
+                    <li id="task3">
+                        <span id="task3-uk">Обґрунтувати вибір технологічного стеку (Python, python-telegram-bot, JSON).</span>
+                        <span id="task3-en" class="hidden">Justify the choice of technology stack (Python, python-telegram-bot, JSON).</span>
+                    </li>
+                    <li id="task4">
+                        <span id="task4-uk">Створити схему взаємодії користувача з ботом та його інформаційне наповнення.</span>
+                        <span id="task4-en" class="hidden">Create the user interaction scheme for the bot and its information content.</span>
+                    </li>
+                    <li id="task5">
+                        <span id="task5-uk">Реалізувати програмну логіку бота та провести комплексне тестування.</span>
+                        <span id="task5-en" class="hidden">Implement the bot's program logic and conduct comprehensive testing.</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Methodology Section -->
+        <section id="methodology" class="bg-white p-8 md:p-10 rounded-xl shadow-md mb-10">
+            <h3 class="text-2xl md:text-3xl font-semibold text-slate-800 mb-6 border-b-2 border-indigo-500 pb-2" id="methodology-title">
+                <span id="methodology-title-uk">Методологія дослідження</span>
+                <span id="methodology-title-en" class="hidden">Research Methodology</span>
+            </h3>
+            <p class="text-lg text-slate-700 leading-relaxed" id="methodology-content">
+                <span id="methodology-content-uk">Розробка телеграм-бота базувалася на мові програмування Python (версія 3.9) з використанням бібліотеки python-telegram-bot для взаємодії з Telegram Bot API. Для зберігання інформаційного наповнення (типові питання, дані суду, контакти, записи) використовувались JSON-файли. Методологія включала системний аналіз для архітектурного проєктування, а також функціональне та інтеграційне тестування для забезпечення якості та стабільності роботи. Застосовувалися гнучкі підходи до розробки для ітераційного покращення функціоналу.</span>
+                <span id="methodology-content-en" class="hidden">The development of the Telegram bot was based on the Python programming language (version 3.9) using the python-telegram-bot library for interacting with the Telegram Bot API. JSON files were used to store informational content (FAQs, court data, contacts, appointments). The methodology included system analysis for architectural design, as well as functional and integration testing to ensure quality and stability. Agile approaches were applied for iterative functional improvement.</span>
+            </p>
+        </section>
+
+        <!-- Expected Results Section -->
+        <section id="expected-results" class="bg-white p-8 md:p-10 rounded-xl shadow-md mb-10">
+            <h3 class="text-2xl md:text-3xl font-semibold text-slate-800 mb-6 border-b-2 border-indigo-500 pb-2" id="expected-results-title">
+                <span id="expected-results-title-uk">Очікувані результати</span>
+                <span id="expected-results-title-en" class="hidden">Expected Results</span>
+            </h3>
+            <ul class="list-disc list-inside text-lg text-slate-700 space-y-2">
+                <li id="result1">
+                    <span id="result1-uk">Створено функціональний телеграм-бот, що автоматизує надання відповідей на типові запитання.</span>
+                    <span id="result1-en" class="hidden">A functional Telegram bot has been created that automates providing answers to typical questions.</span>
+                </li>
+                <li id="result2">
+                    <span id="result2-uk">Забезпечено оперативний цілодобовий доступ до актуальної довідкової інформації про судові установи.</span>
+                    <span id="result2-en" class="hidden">Ensured prompt 24/7 access to up-to-date reference information about judicial institutions.</span>
+                </li>
+                <li id="result3">
+                    <span id="result3-uk">Спрощено процедуру запису громадян на консультацію до працівників суду.</span>
+                    <span id="result3-en" class="hidden">Simplified the procedure for citizens to schedule consultations with court staff.</span>
+                </li>
+                <li id="result4">
+                    <span id="result4-uk">Зменшено навантаження на персонал суду та підвищено доступність інформаційних послуг.</span>
+                    <span id="result4-en" class="hidden">Reduced the workload on court personnel and increased the accessibility of information services.</span>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Illustrative Materials Section -->
+        <section id="illustrations" class="bg-white p-8 md:p-10 rounded-xl shadow-md mb-10">
+            <h3 class="text-2xl md:text-3xl font-semibold text-slate-800 mb-6 border-b-2 border-indigo-500 pb-2" id="illustrations-title">
+                <span id="illustrations-title-uk">Ілюстративні матеріали</span>
+                <span id="illustrations-title-en" class="hidden">Illustrative Materials</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col items-center">
+                    <img src="https://placehold.co/600x400/e0f2f7/0284c7?text=Bot+Architecture" alt="Загальна архітектурна схема телеграм-бота" class="rounded-lg shadow-md w-full max-w-md">
+                    <p class="text-sm text-slate-600 mt-2" id="illustration-caption1">
+                        <span id="illustration-caption1-uk">Рисунок 1. Загальна архітектурна схема телеграм-бота.</span>
+                        <span id="illustration-caption1-en" class="hidden">Figure 1. General architectural diagram of the Telegram bot.</span>
+                    </p>
+                </div>
+                <div class="flex flex-col items-center">
+                    <img src="https://placehold.co/600x400/e0f2f7/0284c7?text=Conversation+Flow" alt="Діаграма станів для процесу запису на консультацію" class="rounded-lg shadow-md w-full max-w-md">
+                    <p class="text-sm text-slate-600 mt-2" id="illustration-caption2">
+                        <span id="illustration-caption2-uk">Рисунок 2. Діаграма станів для процесу запису на консультацію.</span>
+                        <span id="illustration-caption2-en" class="hidden">Figure 2. State diagram for the consultation booking process.</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contacts Section -->
+        <section id="contacts" class="bg-white p-8 md:p-10 rounded-xl shadow-md mb-10">
+            <h3 class="text-2xl md:text-3xl font-semibold text-slate-800 mb-6 border-b-2 border-indigo-500 pb-2" id="contacts-title">
+                <span id="contacts-title-uk">Контактна інформація</span>
+                <span id="contacts-title-en" class="hidden">Contact Information</span>
+            </h3>
+            <div class="text-lg text-slate-700 space-y-3">
+                <p>
+                    <span id="contact-name-uk">Виконав:</span>
+                    <span id="contact-name-en" class="hidden">Performer:</span>
+                    <strong class="text-slate-900">Макаренко Тарас</strong>
+                </p>
+                <p>
+                    <span id="contact-university-uk">Сумський державний університет, Факультет електроніки та інформаційних технологій, Кафедра комп'ютерних наук</span>
+                    <span id="contact-university-en" class="hidden">Sumy State University, Faculty of Electronics and Information Technologies, Department of Computer Science</span>
+                </p>
+                <p>
+                    <span id="contact-email-uk">Електронна пошта:</span>
+                    <span id="contact-email-en" class="hidden">Email:</span>
+                    <a href="mailto:eqwoeqe@gmail.com" class="text-indigo-600 hover:underline">ewqoejiqweqw@gmail.com</a>
+                </p>
+                <p>
+                    <span id="contact-supervisor-uk">Керівник від кафедри:.</span>
+                    <span id="contact-supervisor-en" class="hidden">Supervisor from the Department:</span>
+                </p>
+                <p class="mt-6">
+                    <span id="full-text-link-uk">Повний текст бакалаврської роботи (звіт про розробку бота) доступний за посиланням:</span>
+                    <span id="full-text-link-en" class="hidden">Full text of the bachelor's thesis (bot development report) is available at:</span><br>
+                    <a href="https://example.com/full-thesis-text.pdf" target="_blank" rel="noopener noreferrer" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200 ease-in-out mt-3" aria-label="Посилання на повний текст роботи">
+                        <span id="download-uk">Завантажити повний текст</span>
+                        <span id="download-en" class="hidden">Download Full Text</span>
+                    </a>
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="bg-slate-800 text-white py-6 px-4 md:px-12 text-center rounded-t-lg shadow-inner">
+        <p class="text-sm">
+            <span id="footer-text-uk">© 2025 Сумський державний університет. Усі права захищено.</span>
+            <span id="footer-text-en" class="hidden">© 2025 Sumy State University. All rights reserved.</span>
+        </p>
+        <p class="text-xs mt-2">
+            <span id="footer-github-uk">Цільова сторінка розроблена в рамках лабораторної роботи №2. <br> <a href="https://github.com/your-username/your-repository" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-400">Посилання на репозиторій GitHub</a></span>
+            <span id="footer-github-en" class="hidden">Landing page developed as part of Laboratory Work No. 2. <br> <a href="https://github.com/your-username/your-repository" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-400">Link to GitHub Repository</a></span>
+        </p>
+    </footer>
+
+    <script>
+        // JavaScript for language switching
+        const langData = {
+            uk: {
+                headerTitle: "Телеграм-бот для надання відповідей",
+                projectTitleMain: "Телеграм-бот для надання відповідей на типові питання відвідувачів судових установ",
+                projectDescription: "Ця бакалаврська робота присвячена розробці та програмній реалізації інтелектуального Telegram-бота, який підвищує ефективність інформування відвідувачів судових установ. Він забезпечує швидкі відповіді на типові питання, надає актуальну довідкову інформацію про суд та дозволяє записатися на консультацію.",
+                keywordsLabel: "Ключові слова:",
+                relevanceTitle: "Актуальність теми",
+                relevanceContent: "Сучасна цифровізація вимагає вдосконалення механізмів інформування громадян у судовій сфері. Традиційні методи не завжди відповідають вимогам оперативності та зручності, що призводить до проблем з доступом до інформації та зниженням довіри до правосуддя. Використання Telegram-ботів дозволяє автоматизувати надання відповідей на типові запити та забезпечити цілодобовий доступ до необхідної інформації, що є вкрай актуальним завданням для оптимізації взаємодії громадян із судовими установами.",
+                goalTasksTitle: "Мета дослідження та основні завдання",
+                goalHeading: "Мета дослідження:",
+                goalContent: "Розробка та програмна реалізація інтелектуального телеграм-бота, що підвищить ефективність інформування відвідувачів судових установ, надаючи відповіді на типові питання, актуальну довідкову інформацію про суд та можливість запису на консультацію.",
+                tasksHeading: "Основні завдання:",
+                task1: "Проаналізувати предметну область та існуючі способи інформування у судовій сфері.",
+                task2: "Розробити функціональні вимоги та архітектуру телеграм-бота.",
+                task3: "Обґрунтувати вибір технологічного стеку (Python, python-telegram-bot, JSON).",
+                task4: "Створити схему взаємодії користувача з ботом та його інформаційне наповнення.",
+                task5: "Реалізувати програмну логіку бота та провести комплексне тестування.",
+                methodologyTitle: "Методологія дослідження",
+                methodologyContent: "Розробка телеграм-бота базувалася на мові програмування Python (версія 3.9) з використанням бібліотеки python-telegram-bot для взаємодії з Telegram Bot API. Для зберігання інформаційного наповнення (типові питання, дані суду, контакти, записи) використовувались JSON-файли. Методологія включала системний аналіз для архітектурного проєктування, а також функціональне та інтеграційне тестування для забезпечення якості та стабільності роботи. Застосовувалися гнучкі підходи до розробки для ітераційного покращення функціоналу.",
+                expectedResultsTitle: "Очікувані результати",
+                result1: "Створено функціональний телеграм-бот, що автоматизує надання відповідей на типові запитання.",
+                result2: "Забезпечено оперативний цілодобовий доступ до актуальної довідкової інформації про судові установи.",
+                result3: "Спрощено процедуру запису громадян на консультацію до працівників суду.",
+                result4: "Зменшено навантаження на персонал суду та підвищено доступність інформаційних послуг.",
+                illustrationsTitle: "Ілюстративні матеріали",
+                illustrationCaption1: "Рисунок 1. Загальна архітектурна схема телеграм-бота.",
+                illustrationCaption2: "Рисунок 2. Діаграма станів для процесу запису на консультацію.",
+                contactsTitle: "Контактна інформація",
+                contactName: "Виконав:",
+                contactUniversity: "Сумський державний університет, Факультет електроніки та інформаційних технологій, Кафедра комп'ютерних наук",
+                contactEmail: "Електронна пошта:",
+                contactSupervisor: "Керівник від кафедри: Кузіков Б. О.",
+                fullTextLink: "Повний текст бакалаврської роботи (звіт про розробку бота) доступний за посиланням:",
+                download: "Завантажити повний текст",
+                footerText: "© 2025 Сумський державний університет. Усі права захищено.",
+                footerGithub: "Цільова сторінка розроблена в рамках лабораторної роботи №2. <br> <a href=\"https://github.com/your-username/your-repository\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline hover:text-indigo-400\">Посилання на репозиторій GitHub</a>"
+            },
+            en: {
+                headerTitle: "Telegram Bot for Answering Questions",
+                projectTitleMain: "Telegram Bot for Providing Answers to Typical Questions of Court Visitors",
+                projectDescription: "This bachelor's thesis focuses on the development and software implementation of an intelligent Telegram bot that enhances the efficiency of informing court visitors. It provides quick answers to typical questions, offers up-to-date court information, and allows scheduling consultations.",
+                keywordsLabel: "Keywords:",
+                relevanceTitle: "Relevance of the Topic",
+                relevanceContent: "Modern digitalization demands improving mechanisms for informing citizens in the judicial sphere. Traditional methods often fail to meet requirements for speed and convenience, leading to issues with information access and decreased public trust in justice. Utilizing Telegram bots allows for automating responses to typical inquiries and ensuring 24/7 access to necessary information, which is a highly relevant task for optimizing citizen interaction with judicial institutions.",
+                goalTasksTitle: "Research Goal and Main Tasks",
+                goalHeading: "Research Goal:",
+                goalContent: "Development and software implementation of an intelligent Telegram bot to enhance the efficiency of informing court visitors by providing answers to typical questions, ensuring access to up-to-date court information, and offering the possibility to schedule consultations.",
+                tasksHeading: "Main Tasks:",
+                task1: "Analyze the subject area and existing methods of informing in the judicial sphere.",
+                task2: "Develop functional requirements and architecture for the Telegram bot.",
+                task3: "Justify the choice of technology stack (Python, python-telegram-bot, JSON).",
+                task4: "Create the user interaction scheme for the bot and its information content.",
+                task5: "Implement the bot's program logic and conduct comprehensive testing.",
+                methodologyTitle: "Research Methodology",
+                methodologyContent: "The development of the Telegram bot was based on the Python programming language (version 3.9) using the python-telegram-bot library for interacting with the Telegram Bot API. JSON files were used to store informational content (FAQs, court data, contacts, appointments). The methodology included system analysis for architectural design, as well as functional and integration testing to ensure quality and stability. Agile approaches were applied for iterative functional improvement.",
+                expectedResultsTitle: "Expected Results",
+                result1: "A functional Telegram bot has been created that automates providing answers to typical questions.",
+                result2: "Ensured prompt 24/7 access to up-to-date reference information about judicial institutions.",
+                result3: "Simplified the procedure for citizens to schedule consultations with court staff.",
+                result4: "Reduced the workload on court personnel and increased the accessibility of information services.",
+                illustrationsTitle: "Illustrative Materials",
+                illustrationCaption1: "Figure 1. General architectural diagram of the Telegram bot.",
+                illustrationCaption2: "Figure 2. State diagram for the consultation booking process.",
+                contactsTitle: "Contact Information",
+                contactName: "Performer:",
+                contactUniversity: "Sumy State University, Faculty of Electronics and Information Technologies, Department of Computer Science",
+                contactEmail: "Email:",
+                contactSupervisor: "Supervisor from the Department: Kuzikov B. O.",
+                fullTextLink: "Full text of the bachelor's thesis (bot development report) is available at:",
+                download: "Download Full Text",
+                footerText: "© 2025 Sumy State University. All rights reserved.",
+                footerGithub: "Landing page developed as part of Laboratory Work No. 2. <br> <a href=\"https://github.com/your-username/your-repository\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline hover:text-indigo-400\">Link to GitHub Repository</a>"
+            }
+        };
+
+        const elementsToTranslate = [
+            { id: 'header-title-uk', id_en: 'header-title-en', key: 'headerTitle' },
+            { id: 'project-title-uk', id_en: 'project-title-en', key: 'projectTitleMain' },
+            { id: 'project-description-uk', id_en: 'project-description-en', key: 'projectDescription' },
+            { id: 'keywords-label-uk', id_en: 'keywords-label-en', key: 'keywordsLabel' },
+            { id: 'relevance-title-uk', id_en: 'relevance-title-en', key: 'relevanceTitle' },
+            { id: 'relevance-content-uk', id_en: 'relevance-content-en', key: 'relevanceContent' },
+            { id: 'goal-tasks-title-uk', id_en: 'goal-tasks-title-en', key: 'goalTasksTitle' },
+            { id: 'goal-heading-uk', id_en: 'goal-heading-en', key: 'goalHeading' },
+            { id: 'goal-content-uk', id_en: 'goal-content-en', key: 'goalContent' },
+            { id: 'tasks-heading-uk', id_en: 'tasks-heading-en', key: 'tasksHeading' },
+            { id: 'task1-uk', id_en: 'task1-en', key: 'task1' },
+            { id: 'task2-uk', id_en: 'task2-en', key: 'task2' },
+            { id: 'task3-uk', id_en: 'task3-en', key: 'task3' },
+            { id: 'task4-uk', id_en: 'task4-en', key: 'task4' },
+            { id: 'task5-uk', id_en: 'task5-en', key: 'task5' },
+            { id: 'methodology-title-uk', id_en: 'methodology-title-en', key: 'methodologyTitle' },
+            { id: 'methodology-content-uk', id_en: 'methodology-content-en', key: 'methodologyContent' },
+            { id: 'expected-results-title-uk', id_en: 'expected-results-title-en', key: 'expectedResultsTitle' },
+            { id: 'result1-uk', id_en: 'result1-en', key: 'result1' },
+            { id: 'result2-uk', id_en: 'result2-en', key: 'result2' },
+            { id: 'result3-uk', id_en: 'result3-en', key: 'result3' },
+            { id: 'result4-uk', id_en: 'result4-en', key: 'result4' },
+            { id: 'illustrations-title-uk', id_en: 'illustrations-title-en', key: 'illustrationsTitle' },
+            { id: 'illustration-caption1-uk', id_en: 'illustration-caption1-en', key: 'illustrationCaption1' },
+            { id: 'illustration-caption2-uk', id_en: 'illustration-caption2-en', key: 'illustrationCaption2' },
+            { id: 'contacts-title-uk', id_en: 'contacts-title-en', key: 'contactsTitle' },
+            { id: 'contact-name-uk', id_en: 'contact-name-en', key: 'contactName' },
+            { id: 'contact-university-uk', id_en: 'contact-university-en', key: 'contactUniversity' },
+            { id: 'contact-email-uk', id_en: 'contact-email-en', key: 'contactEmail' },
+            { id: 'contact-supervisor-uk', id_en: 'contact-supervisor-en', key: 'contactSupervisor' },
+            { id: 'full-text-link-uk', id_en: 'full-text-link-en', key: 'fullTextLink' },
+            { id: 'download-uk', id_en: 'download-en', key: 'download' },
+            { id: 'footer-text-uk', id_en: 'footer-text-en', key: 'footerText' },
+            { id: 'footer-github-uk', id_en: 'footer-github-en', key: 'footerGithub' }
+        ];
+
+        function setLanguage(lang) {
+            document.documentElement.lang = lang; // Set lang attribute for HTML
+            document.getElementById('current-lang-display').textContent = lang.toUpperCase();
+
+            elementsToTranslate.forEach(element => {
+                const ukElement = document.getElementById(element.id);
+                const enElement = document.getElementById(element.id_en);
+
+                if (ukElement && enElement) {
+                    if (lang === 'uk') {
+                        ukElement.classList.remove('hidden');
+                        enElement.classList.add('hidden');
+                    } else {
+                        ukElement.classList.add('hidden');
+                        enElement.classList.remove('hidden');
+                    }
+                }
+            });
+            localStorage.setItem('selectedLang', lang); // Save user's preference
+        }
+
+        // Language switcher dropdown toggle
+        const langSwitcherButton = document.getElementById('lang-switcher-button');
+        const langMenu = document.getElementById('lang-menu');
+
+        if (langSwitcherButton && langMenu) {
+            langSwitcherButton.addEventListener('click', () => {
+                langMenu.classList.toggle('hidden');
+                langSwitcherButton.setAttribute('aria-expanded', langMenu.classList.contains('hidden') ? 'false' : 'true');
+            });
+
+            // Close dropdown if clicked outside
+            document.addEventListener('click', (event) => {
+                if (!langSwitcherButton.contains(event.target) && !langMenu.contains(event.target)) {
+                    langMenu.classList.add('hidden');
+                    langSwitcherButton.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            // Set language on option click
+            document.querySelectorAll('.lang-option').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    setLanguage(event.target.dataset.lang);
+                    langMenu.classList.add('hidden'); // Hide dropdown after selection
+                    langSwitcherButton.setAttribute('aria-expanded', 'false');
+                });
+            });
+        }
+
+
+        // Load language preference from localStorage or default to Ukrainian
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('selectedLang') || 'uk'; // Default to Ukrainian
+            setLanguage(savedLang);
+        });
+
+        // Optional: Smooth scroll for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // robots.txt and sitemap.xml are static files that should be placed in the root directory of your project.
+        // They are mentioned here conceptually as part of SEO requirements.
+        // robots.txt example content:
+        // User-agent: *
+        // Allow: /
+        // Sitemap: https://your-github-pages-url.com/sitemap.xml
+
+        // sitemap.xml example content (for a simple one-page site):
+        // <?xml version="1.0" encoding="UTF-8"?>
+        // <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+        //   <url>
+        //     <loc>https://your-github-pages-url.com/</loc>
+        //     <lastmod>2025-06-10</lastmod>
+        //     <changefreq>monthly</changefreq>
+        //     <priority>1.0</priority>
+        //   </url>
+        // </urlset>
+    </script>
+</body>
+</html>
