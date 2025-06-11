@@ -7,6 +7,7 @@
 """
 import json
 import logging
+import uuid # Для генерації унікальних ID
 from telegram import Update
 from telegram.ext import (
     CommandHandler, MessageHandler, CallbackQueryHandler,
@@ -15,7 +16,7 @@ from telegram.ext import (
 from for_test.utils import (
     load_language, set_language, get_faq_answer, get_court_info,
     get_available_dates, get_available_times_for_date,
-    save_appointment, send_admin_notification, load_language_message, is_admin # Додано load_language_message, is_admin
+    save_appointment, send_admin_notification, load_language_message, is_admin
 )
 from for_test.keyboards import (
     get_main_menu, get_language_keyboard, get_faq_keyboard, get_inline_keyboard
@@ -32,6 +33,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     Надсилає вітальне повідомлення та пропонує користувачеві обрати мову інтерфейсу
     за допомогою інлайн-клавіатури. Це початкова точка входу в бота.
+    Генерує унікальний ідентифікатор кореляції для відстеження запиту.
 
     :param update: Об'єкт, що містить інформацію про вхідне оновлення (повідомлення).
     :type update: telegram.Update
@@ -42,20 +44,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """
     user_id = update.effective_user.id
     username = update.effective_user.username or update.effective_user.first_name
-    logger.info(f"User {username} ({user_id}) started the dialog. Context: {context.user_data}")
+    # Генеруємо унікальний ID для трасування запиту
+    correlation_id = str(uuid.uuid4())
+    context.user_data['correlation_id'] = correlation_id
+
+    logger.info(
+        f"[REQ_ID:{correlation_id}] User {username} ({user_id}) started the dialog. "
+        f"Context: {context.user_data}"
+    )
     try:
         await update.message.reply_text(
             load_language_message('uk', 'choose_language'), reply_markup=get_language_keyboard()
         )
     except Exception as e:
-        logger.error(f"ERR_HANDLER_001: Failed to send start message to user {user_id}: {e}", exc_info=True)
-        # Сповіщення користувача про загальну помилку
+        logger.error(
+            f"ERR_HANDLER_001 [REQ_ID:{correlation_id}]: Failed to send start message to user {user_id}: {e}",
+            exc_info=True
+        )
         await update.message.reply_text(
             load_language_message('uk', 'generic_user_error')
         )
-        # Сповіщення адміністратора про критичну помилку
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_001 при запуску діалогу для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_001 [REQ_ID:{correlation_id}] при запуску діалогу.\n"
+            f"Користувач: {username} ({user_id})\nПомилка: {e}"
         )
     return LANG_SELECT
 
@@ -75,20 +87,28 @@ async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     lang = update.callback_query.data
     user_id = update.effective_user.id
     username = update.effective_user.username or update.effective_user.first_name
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
     try:
-        set_language(user_id, lang)
-        logger.info(f"User {username} ({user_id}) set language to '{lang}'.")
+        set_language(user_id, lang, correlation_id) # Передаємо correlation_id
+        logger.info(
+            f"[REQ_ID:{correlation_id}] User {username} ({user_id}) set language to '{lang}'."
+        )
         await update.callback_query.answer()
         await update.callback_query.message.reply_text(
             load_language_message(lang, 'language_set_success'), reply_markup=get_main_menu(lang)
         )
     except Exception as e:
-        logger.error(f"ERR_HANDLER_002: Error setting language for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_002 [REQ_ID:{correlation_id}]: Error setting language for user {user_id}: {e}",
+            exc_info=True
+        )
         await update.callback_query.message.reply_text(
             load_language_message(lang, 'generic_user_error_with_contact')
         )
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_002 при встановленні мови для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_002 [REQ_ID:{correlation_id}] при встановленні мови.\n"
+            f"Користувач: {username} ({user_id})\nМова: {lang}\nПомилка: {e}"
         )
     return ConversationHandler.END
 
@@ -105,15 +125,23 @@ async def show_faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
-    logger.debug(f"User {user_id} requested FAQ. Lang: {lang}")
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
+    logger.debug(f"[REQ_ID:{correlation_id}] User {user_id} requested FAQ. Lang: {lang}")
     try:
-        await update.message.reply_text(load_language_message(lang, 'choose_faq_question'),
-                                        reply_markup=get_faq_keyboard(lang))
+        await update.message.reply_text(
+            load_language_message(lang, 'choose_faq_question'),
+            reply_markup=get_faq_keyboard(lang, correlation_id) # Передаємо correlation_id
+        )
     except Exception as e:
-        logger.error(f"ERR_HANDLER_003: Error showing FAQ for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_003 [REQ_ID:{correlation_id}]: Error showing FAQ for user {user_id}: {e}",
+            exc_info=True
+        )
         await update.message.reply_text(load_language_message(lang, 'generic_user_error_with_contact'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_003 при відображенні FAQ для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_003 [REQ_ID:{correlation_id}] при відображенні FAQ.\n"
+            f"Користувач: {user_id}\nПомилка: {e}"
         )
 
 async def answer_faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -130,17 +158,27 @@ async def answer_faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     lang = load_language(user_id)
     question = update.message.text
-    logger.debug(f"User {user_id} asked: '{question}'. Lang: {lang}")
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
+    logger.debug(f"[REQ_ID:{correlation_id}] User {user_id} asked: '{question}'. Lang: {lang}")
     try:
-        answer = get_faq_answer(lang, question)
+        answer = get_faq_answer(lang, question, correlation_id) # Передаємо correlation_id
         if "⚠️" in answer: # Простий спосіб виявити, що відповіді не знайдено
-            logger.warning(f"WARN_HANDLER_001: No FAQ answer found for user {user_id} for question: '{question}'.")
+            logger.warning(
+                f"WARN_HANDLER_001 [REQ_ID:{correlation_id}]: No FAQ answer found for user {user_id} "
+                f"for question: '{question}'."
+            )
         await update.message.reply_text(answer, reply_markup=get_main_menu(lang))
     except Exception as e:
-        logger.error(f"ERR_HANDLER_004: Error answering FAQ for user {user_id} for question '{question}': {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_004 [REQ_ID:{correlation_id}]: Error answering FAQ for user {user_id} "
+            f"for question '{question}': {e}",
+            exc_info=True
+        )
         await update.message.reply_text(load_language_message(lang, 'generic_user_error_with_contact'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_004 при відповіді на FAQ для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_004 [REQ_ID:{correlation_id}] при відповіді на FAQ.\n"
+            f"Користувач: {user_id}\nПитання: '{question}'\nПомилка: {e}"
         )
 
 async def show_court_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -156,9 +194,10 @@ async def show_court_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
-    logger.debug(f"User {user_id} requested court info. Lang: {lang}")
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
+    logger.debug(f"[REQ_ID:{correlation_id}] User {user_id} requested court info. Lang: {lang}")
     try:
-        info = get_court_info(lang)
+        info = get_court_info(lang, correlation_id) # Передаємо correlation_id
         text = (
             f"📍 {load_language_message(lang, 'address')}: {info['address']}\n"
             f"🕒 {load_language_message(lang, 'schedule')}: {info['work_time']}\n"
@@ -167,10 +206,15 @@ async def show_court_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await update.message.reply_text(text)
     except Exception as e:
-        logger.error(f"ERR_HANDLER_005: Error showing court info for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_005 [REQ_ID:{correlation_id}]: Error showing court info for user {user_id}: {e}",
+            exc_info=True
+        )
         await update.message.reply_text(load_language_message(lang, 'generic_user_error_with_contact'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_005 при відображенні інфо про суд для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_005 [REQ_ID:{correlation_id}] при відображенні інфо про суд.\n"
+            f"Користувач: {user_id}\nПомилка: {e}"
         )
 
 async def show_court_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -186,13 +230,15 @@ async def show_court_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
-    logger.debug(f"User {user_id} requested court schedule. Lang: {lang}")
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
+    logger.debug(f"[REQ_ID:{correlation_id}] User {user_id} requested court schedule. Lang: {lang}")
     try:
+        # Припускаємо, що court_schedule.json знаходиться у корені проєкту або поруч
         with open("court_schedule.json", "r", encoding="utf-8") as file_handle:
             data = json.load(file_handle)
         if not data:
             msg = load_language_message(lang, 'no_schedule_available')
-            logger.info(f"User {user_id}: No schedule data found.")
+            logger.info(f"[REQ_ID:{correlation_id}] User {user_id}: No schedule data found.")
         else:
             msg = load_language_message(lang, 'court_schedule_title') + "\n"
             for item in data:
@@ -203,16 +249,26 @@ async def show_court_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE
                 )
         await update.message.reply_text(msg)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error(f"ERR_HANDLER_006: Error loading court schedule for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_006 [REQ_ID:{correlation_id}]: Error loading court schedule for user {user_id}: {e}",
+            exc_info=True
+        )
         await update.message.reply_text(load_language_message(lang, 'data_load_error'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_006 при завантаженні розкладу суду для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_006 [REQ_ID:{correlation_id}] при завантаженні розкладу суду.\n"
+            f"Користувач: {user_id}\nПомилка: {e}"
         )
     except Exception as e:
-        logger.error(f"ERR_HANDLER_007: Unexpected error in show_court_schedule for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_007 [REQ_ID:{correlation_id}]: Unexpected error in show_court_schedule for user {user_id}: {e}",
+            exc_info=True
+        )
         await update.message.reply_text(load_language_message(lang, 'generic_user_error_with_contact'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_007 при відображенні розкладу суду для {user_id}. {e}"
+            context.bot,
+            f"Критична помимилка ERR_HANDLER_007 [REQ_ID:{correlation_id}] при відображенні розкладу суду.\n"
+            f"Користувач: {user_id}\nПомилка: {e}"
         )
 
 async def show_contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -228,30 +284,42 @@ async def show_contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
-    logger.debug(f"User {user_id} requested other contacts. Lang: {lang}")
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
+    logger.debug(f"[REQ_ID:{correlation_id}] User {user_id} requested other contacts. Lang: {lang}")
     try:
+        # Припускаємо, що contacts.json знаходиться у корені проєкту або поруч
         with open("contacts.json", "r", encoding="utf-8") as file_handle:
             data = json.load(file_handle)
         entries = data.get(lang, [])
         if not entries:
             msg = load_language_message(lang, 'no_contacts_available')
-            logger.info(f"User {user_id}: No contacts data found for lang {lang}.")
+            logger.info(f"[REQ_ID:{correlation_id}] User {user_id}: No contacts data found for lang {lang}.")
         else:
             msg = load_language_message(lang, 'other_contacts_title') + "\n"
             for contact in entries:
                 msg += f"📌 {contact['org']} — {contact['phone']}\n"
         await update.message.reply_text(msg)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error(f"ERR_HANDLER_008: Error loading other contacts for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_008 [REQ_ID:{correlation_id}]: Error loading other contacts for user {user_id}: {e}",
+            exc_info=True
+        )
         await update.message.reply_text(load_language_message(lang, 'data_load_error'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_008 при завантаженні контактів для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_008 [REQ_ID:{correlation_id}] при завантаженні контактів.\n"
+            f"Користувач: {user_id}\nПомилка: {e}"
         )
     except Exception as e:
-        logger.error(f"ERR_HANDLER_009: Unexpected error in show_contacts for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_009 [REQ_ID:{correlation_id}]: Unexpected error in show_contacts for user {user_id}: {e}",
+            exc_info=True
+        )
         await update.message.reply_text(load_language_message(lang, 'generic_user_error_with_contact'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_009 при відображенні контактів для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_009 [REQ_ID:{correlation_id}] при відображенні контактів.\n"
+            f"Користувач: {user_id}\nПомилка: {e}"
         )
 
 async def ask_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -269,14 +337,20 @@ async def ask_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
-    logger.info(f"User {user_id} started appointment booking.")
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
+    logger.info(f"[REQ_ID:{correlation_id}] User {user_id} started appointment booking.")
     try:
         await update.message.reply_text(load_language_message(lang, 'enter_full_name'))
     except Exception as e:
-        logger.error(f"ERR_HANDLER_010: Error asking name for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_010 [REQ_ID:{correlation_id}]: Error asking name for user {user_id}: {e}",
+            exc_info=True
+        )
         await update.message.reply_text(load_language_message(lang, 'generic_user_error_with_contact'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_010 при запиті ПІБ для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_010 [REQ_ID:{correlation_id}] при запиті ПІБ.\n"
+            f"Користувач: {user_id}\nПомилка: {e}"
         )
     return ASK_NAME
 
@@ -295,20 +369,33 @@ async def ask_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
     try:
         context.user_data["name"] = update.message.text
-        logger.debug(f"User {user_id} entered name: {context.user_data['name']}")
-        dates = get_available_dates()
+        logger.debug(
+            f"[REQ_ID:{correlation_id}] User {user_id} entered name: {context.user_data['name']}"
+        )
+        dates = get_available_dates(correlation_id) # Передаємо correlation_id
         if not dates:
-            logger.warning(f"WARN_HANDLER_002: No available dates generated for user {user_id}.")
+            logger.warning(
+                f"WARN_HANDLER_002 [REQ_ID:{correlation_id}]: No available dates generated for user {user_id}."
+            )
             await update.message.reply_text(load_language_message(lang, 'no_dates_available'))
             return ConversationHandler.END # Завершуємо діалог, бо немає дат
-        await update.message.reply_text(load_language_message(lang, 'choose_date'), reply_markup=get_inline_keyboard(dates))
+        await update.message.reply_text(
+            load_language_message(lang, 'choose_date'), reply_markup=get_inline_keyboard(dates)
+        )
     except Exception as e:
-        logger.error(f"ERR_HANDLER_011: Error asking date for user {user_id} after name input: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_011 [REQ_ID:{correlation_id}]: Error asking date for user {user_id} "
+            f"after name input: {e}",
+            exc_info=True
+        )
         await update.message.reply_text(load_language_message(lang, 'generic_user_error_with_contact'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_011 при запиті дати для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_011 [REQ_ID:{correlation_id}] при запиті дати.\n"
+            f"Користувач: {user_id}\nПомилка: {e}"
         )
     return ASK_DATE
 
@@ -327,24 +414,38 @@ async def ask_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
     try:
         selected_date = update.callback_query.data
         context.user_data["selected_date"] = selected_date
-        logger.debug(f"User {user_id} selected date: {selected_date}")
-        times = get_available_times_for_date(selected_date)
+        logger.debug(
+            f"[REQ_ID:{correlation_id}] User {user_id} selected date: {selected_date}"
+        )
+        times = get_available_times_for_date(selected_date, correlation_id) # Передаємо correlation_id
         if not times:
-            logger.warning(f"WARN_HANDLER_003: No available times generated for user {user_id} on {selected_date}.")
+            logger.warning(
+                f"WARN_HANDLER_003 [REQ_ID:{correlation_id}]: No available times generated for user {user_id} "
+                f"on {selected_date}."
+            )
             await update.callback_query.answer()
             await update.callback_query.message.reply_text(load_language_message(lang, 'no_times_available'))
             return ConversationHandler.END # Завершуємо діалог
         await update.callback_query.answer()
-        await update.callback_query.message.reply_text(load_language_message(lang, 'choose_time'), reply_markup=get_inline_keyboard(times))
+        await update.callback_query.message.reply_text(
+            load_language_message(lang, 'choose_time'), reply_markup=get_inline_keyboard(times)
+        )
     except Exception as e:
-        logger.error(f"ERR_HANDLER_012: Error asking time for user {user_id} after date input: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_012 [REQ_ID:{correlation_id}]: Error asking time for user {user_id} "
+            f"after date input: {e}",
+            exc_info=True
+        )
         await update.callback_query.answer()
         await update.callback_query.message.reply_text(load_language_message(lang, 'generic_user_error_with_contact'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_012 при запиті часу для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_012 [REQ_ID:{correlation_id}] при запиті часу.\n"
+            f"Користувач: {user_id}\nПомилка: {e}"
         )
     return ASK_TIME
 
@@ -363,30 +464,39 @@ async def confirm_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
     try:
         time = update.callback_query.data
         name = context.user_data.get("name", load_language_message(lang, 'no_name_provided'))
 
         # Перевірка на вже існуючий запис (базова)
         # У продакшені варто додати більш надійну перевірку у utils
-        appointments_exist = False # Заглушка, для реальної перевірки потрібен доступ до appointments.json
+        # appointments_exist = False # Заглушка, для реальної перевірки потрібен доступ до appointments.json
         # if appointments_exist:
-        #    logger.warning(f"WARN_HANDLER_004: User {user_id} attempted to book already taken slot: {time}")
+        #    logger.warning(f"WARN_HANDLER_004 [REQ_ID:{correlation_id}]: User {user_id} attempted to book already taken slot: {time}")
         #    await update.callback_query.message.reply_text(load_language_message(lang, 'slot_already_taken'))
         #    return ConversationHandler.END
 
-        save_appointment(user_id, name, time)
-        logger.info(f"User {user_id} successfully booked appointment: {name} on {time}.")
+        save_appointment(user_id, name, time, correlation_id) # Передаємо correlation_id
+        logger.info(
+            f"[REQ_ID:{correlation_id}] User {user_id} successfully booked appointment: "
+            f"{name} on {time}."
+        )
         await update.callback_query.answer()
         await update.callback_query.message.reply_text(
             load_language_message(lang, 'appointment_booked_success'), reply_markup=get_main_menu(lang)
         )
     except Exception as e:
-        logger.error(f"ERR_HANDLER_013: Error confirming appointment for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"ERR_HANDLER_013 [REQ_ID:{correlation_id}]: Error confirming appointment for user {user_id}: {e}",
+            exc_info=True
+        )
         await update.callback_query.answer()
         await update.callback_query.message.reply_text(load_language_message(lang, 'generic_user_error_with_contact'))
         await send_admin_notification(
-            context.bot, f"Критична помилка ERR_HANDLER_013 при підтвердженні запису для {user_id}. {e}"
+            context.bot,
+            f"Критична помилка ERR_HANDLER_013 [REQ_ID:{correlation_id}] при підтвердженні запису.\n"
+            f"Користувач: {user_id}\nПомилка: {e}"
         )
     return ConversationHandler.END
 
@@ -395,10 +505,14 @@ async def fallback_message_handler(update: Update, context: ContextTypes.DEFAULT
     """Обробник для повідомлень, що не були розпізнані.
 
     Надсилає користувачеві повідомлення про те, що команда не розпізнана.
+    Включає correlation_id у лог.
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
-    logger.info(f"User {user_id} sent unrecognized message: '{update.message.text}'")
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
+    logger.info(
+        f"[REQ_ID:{correlation_id}] User {user_id} sent unrecognized message: '{update.message.text}'"
+    )
     await update.message.reply_text(load_language_message(lang, 'unrecognized_command'), reply_markup=get_main_menu(lang))
 
 
@@ -407,14 +521,18 @@ async def admin_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
     """Обробник для адмінських команд.
 
     Тільки адміни можуть використовувати цю команду.
+    Включає correlation_id у лог.
     """
     user_id = update.effective_user.id
     lang = load_language(user_id)
+    correlation_id = context.user_data.get('correlation_id', 'N/A')
     if is_admin(user_id):
-        logger.info(f"Admin {user_id} used admin command.")
+        logger.info(f"[REQ_ID:{correlation_id}] Admin {user_id} used admin command.")
         await update.message.reply_text(load_language_message(lang, 'admin_panel_greeting'))
     else:
-        logger.warning(f"Unauthorized access attempt to admin command by user {user_id}.")
+        logger.warning(
+            f"WARN_HANDLER_005 [REQ_ID:{correlation_id}]: Unauthorized access attempt to admin command by user {user_id}."
+        )
         await update.message.reply_text(load_language_message(lang, 'unauthorized_access'))
 
 

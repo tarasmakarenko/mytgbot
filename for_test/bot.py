@@ -45,6 +45,9 @@ file_handler.setLevel(NUMERIC_LOG_LEVEL)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
+# Додатково, для логування винятків
+logging.basicConfig(level=logging.INFO, handlers=[console_handler, file_handler])
+
 # --- Кінець налаштування логування ---
 
 
@@ -85,6 +88,7 @@ def main():
         # Намагаємося надіслати сповіщення адміністратору, якщо бот хоч якось функціонував
         # (хоча при критичній помилці запуску це може не спрацювати)
         admin_message = load_language_message('uk', 'admin_critical_error_notification')
+        # Так як context.bot недоступний тут напряму, передаємо application.bot
         send_admin_notification(application.bot, f"{admin_message}\nПомилка: {e}")
 
 

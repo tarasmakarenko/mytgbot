@@ -14,8 +14,6 @@ from typing import Dict, Any, Union
 logger = logging.getLogger(__name__)
 
 # --- Локалізація повідомлень ---
-# Завантажуємо всі повідомлення з файлу messages.json
-# Цей файл повинен містити всі локалізовані повідомлення для користувача та адміністратора.
 _messages_data: Dict[str, Dict[str, str]] = {}
 MESSAGES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'messages.json')
 
@@ -28,8 +26,7 @@ def _load_messages():
         logger.info("Messages data loaded successfully.")
     except (FileNotFoundError, json.JSONDecodeError) as e:
         logger.critical(f"ERR_UTIL_001: Critical error loading messages.json: {e}", exc_info=True)
-        # У випадку критичної помилки, ініціалізуємо порожніми даними
-        # або базовими англійськими повідомленнями для мінімальної функціональності
+        # У випадку критичної помилки, ініціалізуємо базовими повідомленнями
         _messages_data = {
             "uk": {
                 "generic_user_error": "Вибачте, сталася неочікувана помилка. Будь ласка, спробуйте пізніше.",
@@ -38,6 +35,7 @@ def _load_messages():
                 "choose_language": "🌐 Оберіть мову / Choose language:",
                 "language_set_success": "✅ Мову встановлено!",
                 "choose_faq_question": "❓ Оберіть питання:",
+                "faq_answer_not_found": "⚠️ Вибачте, відповіді на це питання не знайдено. Спробуйте інше питання або зверніться до адміністратора.",
                 "data_load_error": "⚠️ Вибачте, сталася помилка при завантаженні даних. Будь ласка, спробуйте пізніше.",
                 "no_schedule_available": "Наразі розклад засідань відсутній.",
                 "court_schedule_title": "📅 Розклад засідань:",
@@ -53,12 +51,14 @@ def _load_messages():
                 "appointment_booked_success": "✅ Ви успішно записані!",
                 "no_name_provided": "Без імені",
                 "unrecognized_command": "🤷‍♀️ Вибачте, я не зрозумів вашу команду. Будь ласка, оберіть опцію з меню або використайте /start.",
+                "unauthorized_access": "🚫 Вибачте, у вас немає доступу до цієї команди.",
+                "admin_panel_greeting": "Привіт, адміністраторе! Це адмін-панель.",
                 "address": "Адреса",
                 "schedule": "Графік",
                 "phone": "Телефон",
                 "email": "Email",
-                "admin_panel_greeting": "Привіт, адміністраторе! Це адмін-панель.",
-                "unauthorized_access": "🚫 Вибачте, у вас немає доступу до цієї команди."
+                "no_appointments_admin": "Немає записів.",
+                "no_appointments_user": "No appointments yet."
             },
             "en": {
                 "generic_user_error": "Sorry, an unexpected error occurred. Please try again later.",
@@ -67,6 +67,7 @@ def _load_messages():
                 "choose_language": "🌐 Оберіть мову / Choose language:",
                 "language_set_success": "✅ Language set!",
                 "choose_faq_question": "❓ Choose a question:",
+                "faq_answer_not_found": "⚠️ Sorry, no answer found for this question. Try another question or contact the administrator.",
                 "data_load_error": "⚠️ Sorry, there was an error loading data. Please try again later.",
                 "no_schedule_available": "No hearing schedule available at the moment.",
                 "court_schedule_title": "📅 Hearing Schedule:",
@@ -82,19 +83,24 @@ def _load_messages():
                 "appointment_booked_success": "✅ You are successfully booked!",
                 "no_name_provided": "No name provided",
                 "unrecognized_command": "🤷‍♀️ Sorry, I didn't understand your command. Please choose an option from the menu or use /start.",
+                "unauthorized_access": "🚫 Sorry, you do not have access to this command.",
+                "admin_panel_greeting": "Hello, admin! This is the admin panel.",
                 "address": "Address",
                 "schedule": "Schedule",
                 "phone": "Phone",
                 "email": "Email",
-                "admin_panel_greeting": "Hello, admin! This is the admin panel.",
-                "unauthorized_access": "🚫 Sorry, you do not have access to this command."
+                "no_appointments_admin": "No appointments.",
+                "no_appointments_user": "No appointments yet."
             }
         }
-    except Exception as ex: # Останній шанс перехопити, якщо навіть базові повідомлення не завантажились
+    except Exception as ex:
         logger.critical(f"ERR_UTIL_002: Very critical error during message loading fallback: {ex}", exc_info=True)
-        _messages_data = {"uk": {"generic_user_error": "System error. Please try again later."}, "en": {"generic_user_error": "System error. Please try again later."}}
+        _messages_data = {
+            "uk": {"generic_user_error": "System error. Please try again later."},
+            "en": {"generic_user_error": "System error. Please try again later."}
+        }
 
-_load_messages() # Завантажуємо повідомлення при старті модуля
+_load_messages()
 
 def load_language_message(lang_code: str, message_key: str) -> str:
     """
@@ -108,16 +114,14 @@ def load_language_message(lang_code: str, message_key: str) -> str:
     :returns: Локалізоване повідомлення.
     :rtype: str
     """
-    # Додамо контекстну інформацію: message_key, lang_code
     logger.debug(f"Attempting to load message '{message_key}' for language '{lang_code}'.")
 
     if lang_code not in _messages_data:
         logger.warning(f"WARN_UTIL_001: Language '{lang_code}' not found in messages data. Falling back to 'en'.")
-        lang_code = 'en' # Запасний варіант на англійську, якщо мова не знайдена
+        lang_code = 'en'
 
     message = _messages_data.get(lang_code, {}).get(message_key)
     if message is None:
-        # Якщо повідомлення не знайдено, логуємо помилку і повертаємо заглушку
         logger.error(
             f"ERR_UTIL_003: Message key '{message_key}' not found for language '{lang_code}'. "
             "Context: load_language_message failure."
@@ -128,26 +132,32 @@ def load_language_message(lang_code: str, message_key: str) -> str:
 
 # --- Функції бота ---
 
-def load_language(user_id: int) -> str:
+def load_language(user_id: int, correlation_id: str = "N/A") -> str:
     """
     Завантажує обрану мову для користувача з файлу languages.json.
     Повертає 'uk' за замовчуванням у разі помилки або відсутності даних.
 
     :param user_id: Унікальний ідентифікатор користувача Telegram.
     :type user_id: int
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     :returns: Код мови ('uk' або 'en').
     :rtype: str
     """
     try:
         with open("languages.json", "r", encoding="utf-8") as file_handle:
             data = json.load(file_handle)
-        logger.debug(f"Loaded language '{data.get(str(user_id))}' for user {user_id}.")
+        logger.debug(
+            f"[REQ_ID:{correlation_id}] Loaded language '{data.get(str(user_id))}' for user {user_id}."
+        )
         return data.get(str(user_id), "uk")
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.warning(f"WARN_UTIL_002: Failed to load languages.json for user {user_id}. Error: {e}")
-        return "uk" # Повертаємо українську за замовчуванням у випадку помилки
+        logger.warning(
+            f"WARN_UTIL_002 [REQ_ID:{correlation_id}]: Failed to load languages.json for user {user_id}. Error: {e}"
+        )
+        return "uk"
 
-def set_language(user_id: int, lang: str):
+def set_language(user_id: int, lang: str, correlation_id: str = "N/A"):
     """
     Зберігає обрану мову для користувача у файлі languages.json.
 
@@ -158,6 +168,8 @@ def set_language(user_id: int, lang: str):
     :type user_id: int
     :param lang: Код мови для збереження ('uk' або 'en').
     :type lang: str
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     """
     data = {}
     try:
@@ -165,22 +177,29 @@ def set_language(user_id: int, lang: str):
             with open("languages.json", "r", encoding="utf-8") as file_handle:
                 data = json.load(file_handle)
     except json.JSONDecodeError as e:
-        logger.warning(f"WARN_UTIL_003: languages.json is corrupted for user {user_id}. Resetting data. Error: {e}")
-        # Продовжуємо з порожніми даними, щоб уникнути подальших збоїв
+        logger.warning(
+            f"WARN_UTIL_003 [REQ_ID:{correlation_id}]: languages.json is corrupted for user {user_id}. "
+            f"Resetting data. Error: {e}"
+        )
     except FileNotFoundError:
-        logger.info(f"languages.json not found for user {user_id}. Creating new file.")
-        pass # Файл не знайдено, починаємо з порожнього словника
+        logger.info(
+            f"[REQ_ID:{correlation_id}] languages.json not found for user {user_id}. Creating new file."
+        )
+        pass
 
     data[str(user_id)] = lang
     try:
         with open("languages.json", "w", encoding="utf-8") as file_handle:
             json.dump(data, file_handle, ensure_ascii=False, indent=2)
-        logger.debug(f"Language '{lang}' saved for user {user_id}.")
+        logger.debug(f"[REQ_ID:{correlation_id}] Language '{lang}' saved for user {user_id}.")
     except IOError as e:
-        logger.error(f"ERR_UTIL_004: Failed to write to languages.json for user {user_id}. Error: {e}", exc_info=True)
+        logger.error(
+            f"ERR_UTIL_004 [REQ_ID:{correlation_id}]: Failed to write to languages.json "
+            f"for user {user_id}. Error: {e}", exc_info=True
+        )
 
 
-def is_admin(user_id: int) -> bool:
+def is_admin(user_id: int, correlation_id: str = "N/A") -> bool:
     """
     Перевіряє, чи є користувач адміністратором, згідно з файлом admins.json.
 
@@ -189,6 +208,8 @@ def is_admin(user_id: int) -> bool:
 
     :param user_id: Унікальний ідентифікатор користувача Telegram.
     :type user_id: int
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     :returns: True, якщо користувач є адміністратором, False - в іншому випадку.
     :rtype: bool
     """
@@ -196,14 +217,17 @@ def is_admin(user_id: int) -> bool:
         with open("admins.json", "r", encoding="utf-8") as file_handle:
             admins = json.load(file_handle)
         is_user_admin = user_id in admins
-        logger.debug(f"User {user_id} is admin: {is_user_admin}.")
+        logger.debug(f"[REQ_ID:{correlation_id}] User {user_id} is admin: {is_user_admin}.")
         return is_user_admin
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.warning(f"WARN_UTIL_004: admins.json not found or corrupted. No admins defined. Error: {e}")
-        return False # Якщо файл не знайдено або він пошкоджений, адміністраторів немає
+        logger.warning(
+            f"WARN_UTIL_004 [REQ_ID:{correlation_id}]: admins.json not found or corrupted. "
+            f"No admins defined. Error: {e}"
+        )
+        return False
 
 
-def get_faq_answer(lang: str, question: str) -> str:
+def get_faq_answer(lang: str, question: str, correlation_id: str = "N/A") -> str:
     """
     Отримує відповідь на питання з файлу faq.json для обраної мови.
 
@@ -214,6 +238,8 @@ def get_faq_answer(lang: str, question: str) -> str:
     :type lang: str
     :param question: Текст питання, на яке потрібно знайти відповідь.
     :type question: str
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     :returns: Текст відповіді на питання або повідомлення про помилку.
     :rtype: str
     """
@@ -221,17 +247,24 @@ def get_faq_answer(lang: str, question: str) -> str:
         with open("faq.json", "r", encoding="utf-8") as file_handle:
             data = json.load(file_handle)
         answer = data[lang].get(question, load_language_message(lang, 'faq_answer_not_found'))
-        logger.debug(f"FAQ answer for '{question}' ({lang}): '{answer[:50]}...'")
+        logger.debug(
+            f"[REQ_ID:{correlation_id}] FAQ answer for '{question}' ({lang}): '{answer[:50]}...'"
+        )
         return answer
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error(f"ERR_UTIL_005: Failed to load faq.json for lang '{lang}'. Error: {e}", exc_info=True)
+        logger.error(
+            f"ERR_UTIL_005 [REQ_ID:{correlation_id}]: Failed to load faq.json for lang '{lang}'. "
+            f"Error: {e}", exc_info=True
+        )
         return load_language_message(lang, 'data_load_error')
     except KeyError: # Якщо мова не знайдена в файлі FAQ
-        logger.error(f"ERR_UTIL_006: Language '{lang}' not found in faq.json.")
+        logger.error(
+            f"ERR_UTIL_006 [REQ_ID:{correlation_id}]: Language '{lang}' not found in faq.json."
+        )
         return load_language_message(lang, 'data_load_error')
 
 
-def get_court_info(lang: str) -> dict:
+def get_court_info(lang: str, correlation_id: str = "N/A") -> dict:
     """
     Отримує інформацію про суд з файлу court_info.json для обраної мови.
 
@@ -241,16 +274,21 @@ def get_court_info(lang: str) -> dict:
 
     :param lang: Код мови ('uk' або 'en').
     :type lang: str
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     :returns: Словник з інформацією про суд (адреса, графік, телефон, email).
     :rtype: dict
     """
     try:
         with open("court_info.json", "r", encoding="utf-8") as file_handle:
             data = json.load(file_handle)
-        logger.debug(f"Loaded court info for language '{lang}'.")
+        logger.debug(f"[REQ_ID:{correlation_id}] Loaded court info for language '{lang}'.")
         return data[lang]
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error(f"ERR_UTIL_007: Failed to load court_info.json for lang '{lang}'. Error: {e}", exc_info=True)
+        logger.error(
+            f"ERR_UTIL_007 [REQ_ID:{correlation_id}]: Failed to load court_info.json for lang '{lang}'. "
+            f"Error: {e}", exc_info=True
+        )
         return {
             "address": load_language_message(lang, 'info_not_available'),
             "work_time": load_language_message(lang, 'info_not_available'),
@@ -258,7 +296,9 @@ def get_court_info(lang: str) -> dict:
             "email": load_language_message(lang, 'info_not_available')
         }
     except KeyError:
-        logger.error(f"ERR_UTIL_008: Language '{lang}' not found in court_info.json.")
+        logger.error(
+            f"ERR_UTIL_008 [REQ_ID:{correlation_id}]: Language '{lang}' not found in court_info.json."
+        )
         return {
             "address": load_language_message(lang, 'info_not_available'),
             "work_time": load_language_message(lang, 'info_not_available'),
@@ -267,14 +307,16 @@ def get_court_info(lang: str) -> dict:
         }
 
 
-def get_available_dates() -> list:
+def get_available_dates(correlation_id: str = "N/A") -> list:
     """
     Генерує список доступних дат для запису (будні дні протягом 14 днів).
 
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     :returns: Список доступних дат.
     :rtype: list[str]
     """
-    logger.debug("Generating available dates.")
+    logger.debug(f"[REQ_ID:{correlation_id}] Generating available dates.")
     today = datetime.now().date()
     dates = []
     for day_offset in range(14):
@@ -283,17 +325,19 @@ def get_available_dates() -> list:
             dates.append(str(current_date))
     return dates
 
-def get_available_times_for_date(selected_date: str) -> list:
+def get_available_times_for_date(selected_date: str, correlation_id: str = "N/A") -> list:
     """
     Генерує список доступних часових слотів для вибраної дати.
     Виключає обідню перерву (13:00).
 
-    :param selected_date: Вибрана дата у форматі YYYY-MM-DD.
+    :param selected_date: Вибрана дата у форматі Jamboree-MM-DD.
     :type selected_date: str
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     :returns: Список доступних часових слотів у форматі "YYYY-MM-DD HH:MM".
     :rtype: list[str]
     """
-    logger.debug(f"Generating available times for date: {selected_date}.")
+    logger.debug(f"[REQ_ID:{correlation_id}] Generating available times for date: {selected_date}.")
     times = []
     for hour in range(9, 17):
         if hour == 13:
@@ -301,7 +345,7 @@ def get_available_times_for_date(selected_date: str) -> list:
         times.append(f"{selected_date} {hour:02d}:00")
     return times
 
-def save_appointment(user_id: int, name: str, time: str):
+def save_appointment(user_id: int, name: str, time: str, correlation_id: str = "N/A"):
     """
     Зберігає інформацію про запис на консультацію до файлу appointments.json.
 
@@ -315,6 +359,8 @@ def save_appointment(user_id: int, name: str, time: str):
     :type name: str
     :param time: Вибраний час запису у форматі "YYYY-MM-DD HH:MM".
     :type time: str
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     """
     data = []
     try:
@@ -322,28 +368,39 @@ def save_appointment(user_id: int, name: str, time: str):
             with open("appointments.json", "r", encoding="utf-8") as file_handle:
                 data = json.load(file_handle)
     except json.JSONDecodeError as e:
-        logger.warning(f"WARN_UTIL_005: appointments.json is corrupted for user {user_id}. Resetting data. Error: {e}")
-        # Продовжуємо з порожніми даними, щоб уникнути подальших збоїв
+        logger.warning(
+            f"WARN_UTIL_005 [REQ_ID:{correlation_id}]: appointments.json is corrupted for user {user_id}. "
+            f"Resetting data. Error: {e}"
+        )
     except FileNotFoundError:
-        logger.info(f"appointments.json not found for user {user_id}. Creating new file.")
-        pass # Файл не знайдено, починаємо з порожнього списку
+        logger.info(
+            f"[REQ_ID:{correlation_id}] appointments.json not found for user {user_id}. Creating new file."
+        )
+        pass
 
     data.append({"user_id": user_id, "name": name, "time": time})
     try:
         with open("appointments.json", "w", encoding="utf-8") as file_handle:
             json.dump(data, file_handle, ensure_ascii=False, indent=2)
-        logger.info(f"Appointment saved for user {user_id}: {name} on {time}.")
+        logger.info(
+            f"[REQ_ID:{correlation_id}] Appointment saved for user {user_id}: {name} on {time}."
+        )
     except IOError as e:
-        logger.error(f"ERR_UTIL_009: Failed to write to appointments.json for user {user_id}. Error: {e}", exc_info=True)
+        logger.error(
+            f"ERR_UTIL_009 [REQ_ID:{correlation_id}]: Failed to write to appointments.json "
+            f"for user {user_id}. Error: {e}", exc_info=True
+        )
 
 
-def get_appointments_for_admin() -> str:
+def get_appointments_for_admin(correlation_id: str = "N/A") -> str:
     """
     Отримує відформатований список всіх записів для адміністратора.
 
     Читає всі записи з `appointments.json` та повертає їх у вигляді
     одного рядка, де кожен запис відображений на новому рядку.
 
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     :returns: Рядок з усіма записами або повідомлення про їх відсутність.
     :rtype: str
     """
@@ -351,15 +408,18 @@ def get_appointments_for_admin() -> str:
         with open("appointments.json", "r", encoding="utf-8") as file_handle:
             data = json.load(file_handle)
         if not data:
-            logger.info("No appointments found for admin request.")
+            logger.info(f"[REQ_ID:{correlation_id}] No appointments found for admin request.")
             return load_language_message('uk', 'no_appointments_admin')
-        logger.debug("Appointments data retrieved for admin.")
+        logger.debug(f"[REQ_ID:{correlation_id}] Appointments data retrieved for admin.")
         return "\n".join([f"— {record['name']}, {record['time']}" for record in data])
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error(f"ERR_UTIL_010: Failed to load appointments.json for admin. Error: {e}", exc_info=True)
+        logger.error(
+            f"ERR_UTIL_010 [REQ_ID:{correlation_id}]: Failed to load appointments.json for admin. "
+            f"Error: {e}", exc_info=True
+        )
         return load_language_message('uk', 'data_load_error')
 
-def get_appointments_for_user() -> str:
+def get_appointments_for_user(correlation_id: str = "N/A") -> str:
     """
     Отримує відформатований список записів для конкретного користувача.
 
@@ -367,21 +427,26 @@ def get_appointments_for_user() -> str:
     безпосередньо в обробниках бота для відображення користувачеві його власних записів.
     Повертає загальний список зайнятих часів, як у вихідному коді.)
 
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     :returns: Рядок з усіма зайнятими часами або повідомлення про їх відсутність.
     :rtype: str
     """
     try:
         with open("appointments.json", "r", encoding="utf-8") as file_handle:
             data = json.load(file_handle)
-        logger.debug("Appointments data retrieved for user (all).")
+        logger.debug(f"[REQ_ID:{correlation_id}] Appointments data retrieved for user (all).")
         # Тут можна було б додати фільтрацію по user_id
         return "\n".join([f"— {record['time']} ❌ Зайнято" for record in data])
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error(f"ERR_UTIL_011: Failed to load appointments.json for user. Error: {e}", exc_info=True)
+        logger.error(
+            f"ERR_UTIL_011 [REQ_ID:{correlation_id}]: Failed to load appointments.json for user. "
+            f"Error: {e}", exc_info=True
+        )
         return load_language_message('uk', 'no_appointments_user')
 
 
-async def send_admin_notification(bot_instance, message: str):
+async def send_admin_notification(bot_instance, message: str, user_info: dict = None):
     """
     Надсилає повідомлення про критичну помилку адміністраторам бота.
     Читає ID адміністраторів з файлу admins.json.
@@ -389,6 +454,9 @@ async def send_admin_notification(bot_instance, message: str):
     :param bot_instance: Екземпляр бота (context.bot).
     :param message: Текст повідомлення для адміністратора.
     :type message: str
+    :param user_info: Словник з інформацією про користувача (id, username, correlation_id).
+                      Може бути None.
+    :type user_info: dict
     """
     try:
         with open("admins.json", "r", encoding="utf-8") as file_handle:
@@ -398,7 +466,15 @@ async def send_admin_notification(bot_instance, message: str):
             return
 
         admin_notification_text = load_language_message('uk', 'admin_critical_error_notification')
-        full_message = f"{admin_notification_text}\n{message}"
+
+        # Додаємо контекстну інформацію про користувача, якщо вона надана
+        context_info = ""
+        if user_info:
+            context_info += f"\nКористувач: {user_info.get('username', 'N/A')} ({user_info.get('user_id', 'N/A')})"
+            context_info += f"\nREQ_ID: {user_info.get('correlation_id', 'N/A')}"
+            context_info += f"\nПовідомлення користувачу: {user_info.get('user_friendly_message', 'N/A')}"
+
+        full_message = f"{admin_notification_text}{context_info}\n\nДеталі помилки:\n{message}"
 
         for admin_id in admins:
             try:

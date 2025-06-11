@@ -53,7 +53,7 @@ def get_main_menu(lang: str) -> ReplyKeyboardMarkup:
         resize_keyboard=True
     )
 
-def get_faq_keyboard(lang: str) -> ReplyKeyboardMarkup:
+def get_faq_keyboard(lang: str, correlation_id: str = "N/A") -> ReplyKeyboardMarkup:
     """Генерує клавіатуру з поширеними питаннями для обраної мови.
 
     Читає питання з файлу `faq.json` та створює ReplyKeyboardMarkup,
@@ -61,16 +61,18 @@ def get_faq_keyboard(lang: str) -> ReplyKeyboardMarkup:
 
     :param lang: Код мови ('uk' або 'en').
     :type lang: str
+    :param correlation_id: Унікальний ідентифікатор запиту для трасування.
+    :type correlation_id: str
     :returns: Об'єкт ReplyKeyboardMarkup зі списком питань FAQ.
     :rtype: telegram.ReplyKeyboardMarkup
     """
-    logger.debug(f"Generating FAQ keyboard for language '{lang}'.")
+    logger.debug(f"[REQ_ID:{correlation_id}] Generating FAQ keyboard for language '{lang}'.")
     try:
         with open("faq.json", "r", encoding="utf-8") as file_handle:
             data = json.load(file_handle)
         return ReplyKeyboardMarkup([[q] for q in data[lang].keys()], resize_keyboard=True)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error(f"ERR_KB_001: Failed to load faq.json for language '{lang}': {e}", exc_info=True)
+        logger.error(f"ERR_KB_001 [REQ_ID:{correlation_id}]: Failed to load faq.json for language '{lang}': {e}", exc_info=True)
         # У випадку помилки, повертаємо порожню клавіатуру або меню за замовчуванням
         return ReplyKeyboardMarkup([["Помилка завантаження FAQ"]], resize_keyboard=True)
 
